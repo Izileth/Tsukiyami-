@@ -1,10 +1,40 @@
-import React from 'react';
-import { Stack } from 'expo-router';
+import React, { useState, useEffect } from 'react';
+import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import * as SplashScreen from 'expo-splash-screen';
 import 'react-native-reanimated';
 import '@/global.css';
 
-export default function RootLayout() {
+import { supabase } from '@/utils/supabase';
+import { AuthProvider, useAuth } from '@/context/AuthContext';
+import LoadingScreen from './_loading';
+
+// Keep the native splash screen visible
+SplashScreen.preventAutoHideAsync();
+
+function RootLayoutNav() {
+  const { session, loading } = useAuth();
+  const router = useRouter();
+  const segments = useSegments();
+
+  useEffect(() => {
+    // Wait for the session to be loaded
+    if (loading) {
+      return;
+    }
+
+    const inAuthGroup = segments[0] === 'auth' || segments[0] === 'register';
+
+    if (!session && !inAuthGroup) {
+      // Redirect to the login page if the user is not signed in
+      // and not on an auth page.
+      router.replace('/auth');
+    } else if (session && inAuthGroup) {
+      // Redirect away from auth pages if the user is signed in.
+      router.replace('/');
+    }
+  }, [session, loading, segments, router]);
+
   return (
     <>
       <Stack>
@@ -16,5 +46,43 @@ export default function RootLayout() {
       </Stack>
       <StatusBar style="auto" />
     </>
+  );
+}
+
+export default function RootLayout() {
+  const [isSplashFinished, setIsSplashFinished] = useState(false);
+  const [isAppReady, setIsAppReady] = useState(false);
+
+  useEffect(() => {
+    async function prepare() {
+      try {
+        // This is where you would load fonts, assets, etc.
+        // We also add a minimum delay to see the splash screen.
+        await Promise.all([
+          supabase.auth.getSession(), // Ensures session is loaded before AuthProvider tries
+          new Promise(resolve => setTimeout(resolve, 10000)),
+        ]);
+      } catch (e) {
+        console.warn('App preparation error:', e);
+      } finally {
+        setIsAppReady(true);
+        await SplashScreen.hideAsync();
+      }
+    }
+
+    prepare();
+  }, []);
+
+  return (
+    <AuthProvider>
+      {!isSplashFinished ? (
+        <LoadingScreen
+          isAppReady={isAppReady}
+          onExitAnimationFinish={() => setIsSplashFinished(true)}
+        />
+      ) : (
+        <RootLayoutNav />
+      )}
+    </AuthProvider>
   );
 }
