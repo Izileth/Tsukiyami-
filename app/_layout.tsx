@@ -7,6 +7,7 @@ import '@/global.css';
 
 import { supabase } from '@/utils/supabase';
 import { AuthProvider, useAuth } from '@/context/AuthContext';
+import { ProfileProvider } from '@/context/ProfileContext';
 import LoadingScreen from './_loading';
 
 // Keep the native splash screen visible
@@ -37,10 +38,10 @@ function RootLayoutNav() {
 
   return (
     <>
-      <Stack>
+      <Stack initialRouteName={session ? 'index' : 'auth'} screenOptions={{headerShown: false}}>
         <Stack.Screen name="index" options={{ headerShown: false }} />
         <Stack.Screen name="explore" options={{ headerShown: false }} />
-        <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
+        <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal', headerShown: false }} />
         <Stack.Screen name="auth" options={{ headerShown: false }} />
         <Stack.Screen name="register" options={{ headerShown: false }} />
       </Stack>
@@ -75,14 +76,16 @@ export default function RootLayout() {
 
   return (
     <AuthProvider>
-      {!isSplashFinished ? (
-        <LoadingScreen
-          isAppReady={isAppReady}
-          onExitAnimationFinish={() => setIsSplashFinished(true)}
-        />
-      ) : (
-        <RootLayoutNav />
-      )}
+      <ProfileProvider>
+        {!isSplashFinished ? (
+          <LoadingScreen
+            isAppReady={isAppReady}
+            onExitAnimationFinish={() => setIsSplashFinished(true)}
+          />
+        ) : (
+          <RootLayoutNav />
+        )}
+      </ProfileProvider>
     </AuthProvider>
   );
 }
