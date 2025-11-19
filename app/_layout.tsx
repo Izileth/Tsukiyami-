@@ -1,9 +1,10 @@
+import 'react-native-url-polyfill/auto';
 import React, { useState, useEffect } from 'react';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
-import 'react-native-reanimated';
 import '@/global.css';
+import '@/utils/polyfills'; // se tiver alias configurado
 
 import { supabase } from '@/utils/supabase';
 import { AuthProvider, useAuth } from '@/context/AuthContext';
