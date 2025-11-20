@@ -49,14 +49,14 @@ const EmptyAvatarIllustration = () => (
   </Svg>
 );
 
-const ProfileInfoCard = ({ 
-  icon, 
-  label, 
-  value 
-}: { 
-  icon: keyof typeof Ionicons.glyphMap; 
-  label: string; 
-  value?: string | null 
+const ProfileInfoCard = ({
+  icon,
+  label,
+  value
+}: {
+  icon: keyof typeof Ionicons.glyphMap;
+  label: string;
+  value?: string | null
 }) => (
   <View className="bg-white rounded-xl p-4 mb-3 border border-gray-200">
     <View className="flex-row items-center">
@@ -73,12 +73,12 @@ const ProfileInfoCard = ({
   </View>
 );
 
-const StatCard = ({ 
-  number, 
-  label 
-}: { 
-  number: string; 
-  label: string 
+const StatCard = ({
+  number,
+  label
+}: {
+  number: string;
+  label: string
 }) => (
   <View className="flex-1 items-center bg-white rounded-xl p-4 border border-gray-200">
     <Text className="text-black text-2xl font-bold mb-1">{number}</Text>
@@ -113,13 +113,13 @@ export default function ProfileScreen() {
     );
   }
 
-  const memberSince = profile?.created_at 
+  const memberSince = profile?.created_at
     ? new Date(profile.created_at).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
     : 'Unknown';
 
-  const displayName = profile?.name || 
-    (profile?.first_name && profile?.last_name 
-      ? `${profile.first_name} ${profile.last_name}` 
+  const displayName = profile?.name ||
+    (profile?.first_name && profile?.last_name
+      ? `${profile.first_name} ${profile.last_name}`
       : profile?.first_name || profile?.last_name || 'No Name');
 
   // Validação mais robusta para URLs
@@ -140,7 +140,7 @@ export default function ProfileScreen() {
       <StatusBar style='light' />
       <ScrollView className="flex-1 " showsVerticalScrollIndicator={false}>
         {/* Banner */}
-        <TouchableOpacity  onPress={() => handleUpload('banners')} className="relative">
+        <TouchableOpacity onPress={() => handleUpload('banners')} className="relative">
           {hasBanner ? (
             <Image
               key={profile?.banner_url}
@@ -168,8 +168,8 @@ export default function ProfileScreen() {
         <View className="px-6 -mt-14 mb-6">
           <View className="flex-row justify-between items-end">
             {/* Avatar */}
-            <TouchableOpacity 
-              onPress={() => handleUpload('avatars')} 
+            <TouchableOpacity
+              onPress={() => handleUpload('avatars')}
               className="relative"
             >
               <View className="rounded-full border-4 border-white shadow-sm bg-white">
@@ -233,26 +233,26 @@ export default function ProfileScreen() {
                 </View>
               )}
             </View>
-            
+
             {profile?.slug && (
               <Text className="text-gray-500 text-base mt-1">
                 @{profile.slug}
               </Text>
             )}
-            
+
             {profile?.position && (
               <Text className="text-black text-base font-medium mt-1">
                 {profile.position}
               </Text>
             )}
-            
+
             {profile?.email && (
               <View className="flex-row items-center mt-2">
                 <Ionicons name="mail-outline" size={14} color="#6B7280" />
                 <Text className="text-gray-500 text-sm ml-2">{profile.email}</Text>
               </View>
             )}
-            
+
             <Text className="text-gray-400 text-sm mt-2">
               Member since {memberSince}
             </Text>
@@ -275,42 +275,127 @@ export default function ProfileScreen() {
           </View>
         </View>
 
-        {/* My Posts Section */}
+        {/* My Posts */}
         <View className="px-6 mb-6">
-          <Text className="text-black text-lg font-bold mb-4 uppercase tracking-wide">My Posts</Text>
+          <Text className="text-2xl font-bold text-black mb-4 tracking-tight">
+            Minhas Postagens
+          </Text>
+
           {postsLoading ? (
             <ActivityIndicator />
           ) : (
-            posts.filter(p => p.user_id === profile?.id).map(p => (
-              <TouchableOpacity
-                key={p.id}
-                onPress={() => {
-                  setSelectedPost(p);
-                  setSheetVisible(true);
-                }}
-                className="bg-white rounded-xl p-4 mb-3 border border-gray-200"
-              >
-                <View className="flex-row justify-between items-center">
-                  <View>
-                    <Text className="text-black font-bold text-lg">{p.title}</Text>
-                    <Text className="text-gray-500 mt-1">{p.description}</Text>
-                  </View>
-                  <TouchableOpacity onPress={() => deletePost(p.id)} className="p-2">
-                    <Ionicons name="trash-outline" size={20} color="red" />
+            posts
+              .filter(p => p.user_id === profile?.id)
+              .map((p, index) => (
+                <TouchableOpacity
+                  key={p.id}
+                  activeOpacity={0.7}
+                  onPress={() => {
+                    setSelectedPost(p);
+                    setSheetVisible(true);
+                  }}
+                  className="mb-8 relative"
+                >
+                  {/* Image Container (mesma proporção do feed) */}
+                  {p.post_images?.length > 0 && (
+                    <View className="w-full aspect-[4/3] bg-gray-100 rounded-3xl overflow-hidden mb-4 border border-gray-200">
+                      <Image
+                        source={{ uri: p.post_images[0].image_url }}
+                        className="w-full h-full"
+                        resizeMode="cover"
+                      />
+                    </View>
+                  )}
+
+                  {/* Delete Button (clean overlay) */}
+                  <TouchableOpacity
+                    onPress={() => deletePost(p.id)}
+                    className="absolute top-4 right-4 bg-white/90 px-4 py-4 rounded-full border border-gray-200"
+                  >
+                    <Ionicons name="trash-outline" size={16} color="#333" />
                   </TouchableOpacity>
-                </View>
-              </TouchableOpacity>
-            ))
+
+                  {/* Content Container */}
+                  <View className="px-1">
+
+                    {/* Title */}
+                    <Text
+                      className="text-2xl font-bold text-black mb-3 leading-tight tracking-tight"
+                      numberOfLines={2}
+                    >
+                      {p.title}
+                    </Text>
+
+                    {/* Description */}
+                    {p.description && (
+                      <Text
+                        className="text-base text-black/60 mb-4 leading-6"
+                        numberOfLines={2}
+                      >
+                        {p.description}
+                      </Text>
+                    )}
+
+                    {/* Categories + Tags */}
+                    {(p.categories.length > 0 || p.tags.length > 0) && (
+                      <View className="flex-row flex-wrap mb-4">
+
+                        {/* Categories (DESTAQUE — igual ao feed) */}
+                        {p.categories.map(c => (
+                          <View
+                            key={c.id}
+                            className="bg-black px-3 py-1.5 rounded-full mr-2 mb-2"
+                          >
+                            <Text className="text-white text-xs font-semibold tracking-wide uppercase">
+                              {c.name}
+                            </Text>
+                          </View>
+                        ))}
+
+                        {/* Tags (secundárias) */}
+                        {p.tags.slice(0, 3).map(t => (
+                          <View
+                            key={t.id}
+                            className="bg-gray-100 border border-gray-300 px-3 py-1.5 rounded-full mr-2 mb-2"
+                          >
+                            <Text className="text-black/70 text-xs font-medium">
+                              {t.name}
+                            </Text>
+                          </View>
+                        ))}
+
+                        {p.tags.length > 3 && (
+                          <View className="bg-gray-100 border border-gray-300 px-3 py-1.5 rounded-full mr-2 mb-2">
+                            <Text className="text-black/70 text-xs font-medium">
+                              +{p.tags.length - 3}
+                            </Text>
+                          </View>
+                        )}
+                      </View>
+                    )}
+
+                    {/* Divider — mesma vibe do feed */}
+                    {index !== posts.filter(x => x.user_id === profile?.id).length - 1 && (
+                      <View className="w-full h-px bg-gray-100 mt-4" />
+                    )}
+                  </View>
+                </TouchableOpacity>
+              ))
           )}
+
+          {/* Empty State */}
           {posts.filter(p => p.user_id === profile?.id).length === 0 && !postsLoading && (
-            <Text className="text-gray-500 text-center">No posts yet.</Text>
+            <Text className="text-black/40 text-center mt-6 text-base">
+              Você ainda não publicou nada.
+            </Text>
           )}
         </View>
+
 
         {/* Details Section */}
         <View className="px-6 pb-6">
           <Text className="text-black text-lg font-bold mb-4 uppercase tracking-wide">Profile Details</Text>
-          
+
           {(profile?.first_name || profile?.last_name) && (
             <View className="bg-white rounded-xl p-4 mb-3 border border-gray-200">
               <View className="flex-row items-center mb-3">
@@ -320,7 +405,7 @@ export default function ProfileScreen() {
                 <View className="flex-1">
                   <Text className="text-gray-500 text-xs mb-1 uppercase tracking-wide">Full Name</Text>
                   <Text className="text-black font-semibold text-base">
-                    {profile?.first_name && profile?.last_name 
+                    {profile?.first_name && profile?.last_name
                       ? `${profile.first_name} ${profile.last_name}`
                       : profile?.first_name || profile?.last_name}
                   </Text>
@@ -340,46 +425,46 @@ export default function ProfileScreen() {
               )}
             </View>
           )}
-          
+
           {profile?.location && (
-            <ProfileInfoCard 
-              icon="location-outline" 
-              label="Location" 
-              value={profile.location} 
+            <ProfileInfoCard
+              icon="location-outline"
+              label="Location"
+              value={profile.location}
             />
           )}
-          
+
           {profile?.website && (
-            <ProfileInfoCard 
-              icon="globe-outline" 
-              label="Website" 
-              value={profile.website} 
+            <ProfileInfoCard
+              icon="globe-outline"
+              label="Website"
+              value={profile.website}
             />
           )}
-          
+
           {profile?.birth_date && (
-            <ProfileInfoCard 
-              icon="calendar-outline" 
-              label="Birth Date" 
-              value={new Date(profile.birth_date).toLocaleDateString('en-US', { 
-                month: 'long', 
-                day: 'numeric', 
-                year: 'numeric' 
-              })} 
+            <ProfileInfoCard
+              icon="calendar-outline"
+              label="Birth Date"
+              value={new Date(profile.birth_date).toLocaleDateString('en-US', {
+                month: 'long',
+                day: 'numeric',
+                year: 'numeric'
+              })}
             />
           )}
 
           {profile?.updated_at && (
-            <ProfileInfoCard 
-              icon="refresh-outline" 
-              label="Last Updated" 
-              value={new Date(profile.updated_at).toLocaleDateString('en-US', { 
-                month: 'short', 
-                day: 'numeric', 
+            <ProfileInfoCard
+              icon="refresh-outline"
+              label="Last Updated"
+              value={new Date(profile.updated_at).toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric',
                 year: 'numeric',
                 hour: '2-digit',
                 minute: '2-digit'
-              })} 
+              })}
             />
           )}
 
@@ -414,13 +499,6 @@ export default function ProfileScreen() {
             <Ionicons name="log-out-outline" size={20} color="#000000" />
             <Text className="text-black font-bold ml-2">Logout</Text>
           </TouchableOpacity>
-          <TouchableOpacity
-            onPress={handleDeleteAccount}
-            className="bg-black rounded-lg p-4 flex-row items-center justify-center"
-          >
-            <Ionicons name="trash-outline" size={20} color="#FFFFFF" />
-            <Text className="text-white font-bold ml-2">Delete Account</Text>
-          </TouchableOpacity>
         </View>
       </ScrollView>
 
@@ -439,35 +517,4 @@ export default function ProfileScreen() {
 
 function handleLogout() {
   supabase.auth.signOut();
-}
-
-function handleDeleteAccount() {
-  Alert.alert(
-    'Delete Account',
-    'Are you sure you want to delete your account? This action is irreversible.',
-    [
-      {
-        text: 'Cancel',
-        style: 'cancel',
-      },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            const { data, error } = await supabase.functions.invoke('delete-user', {
-              method: 'POST',
-            });
-            if (error) {
-              throw error;
-            }
-            Alert.alert('Success', 'Your account has been deleted.');
-            supabase.auth.signOut();
-          } catch (error: any) {
-            Alert.alert('Error', `Failed to delete account: ${error.message}`);
-          }
-        },
-      },
-    ]
-  );
 }

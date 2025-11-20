@@ -36,7 +36,9 @@ const PostForm: React.FC<PostFormProps> = ({ post, onClose }) => {
       setContent(post.content);
       setDescription(post.description);
       setSlug(post.slug);
-      // Here you would fetch the existing images, categories and tags for the post
+      setImageUrls(post.post_images.map(img => img.image_url));
+      setSelectedCategories(post.categories.map(cat => cat.id));
+      setSelectedTags(post.tags.map(tag => tag.id));
     }
   }, [post]);
 
@@ -100,25 +102,25 @@ const PostForm: React.FC<PostFormProps> = ({ post, onClose }) => {
       {imageUrls.length > 0 && <ImageCarousel images={imageUrls} onRemoveImage={handleRemoveImage} />}
 
       <TextInput
-        placeholder="Title"
+        placeholder="Titulo"
         value={title}
         onChangeText={setTitle}
         className="w-full px-4 py-3.5 bg-white border border-gray-300 rounded-xl text-black mb-4"
       />
       
       <TouchableOpacity onPress={handleImagePick} className="mb-4 bg-black p-2 rounded-lg">
-        <Text className="text-white text-center">Select Images</Text>
+        <Text className="text-white text-center">Selecionar Imagens</Text>
       </TouchableOpacity>
       
       <TextInput
-        placeholder="Description"
+        placeholder="Descrição"
         value={description}
         onChangeText={setDescription}
         className="w-full px-4 py-3.5 bg-white border border-gray-300 rounded-xl text-black mb-4"
       />
 
       <TextInput
-        placeholder="Content"
+        placeholder="Conteúdo"
         value={content}
         onChangeText={setContent}
         multiline

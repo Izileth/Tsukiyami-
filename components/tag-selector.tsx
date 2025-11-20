@@ -71,7 +71,7 @@ const TagSelector: React.FC<TagSelectorProps> = ({ selectedTags, onSelectionChan
       </View>
       <View className="flex-row mt-2">
         <TextInput
-          placeholder="New Tag"
+          placeholder="Nova Tag"
           value={newTag}
           onChangeText={setNewTag}
           className="flex-1 border border-gray-300 rounded-lg p-2"

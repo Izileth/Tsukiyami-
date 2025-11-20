@@ -3,14 +3,14 @@ import { MotiView } from 'moti';
 import { useEffect } from 'react';
 import { Easing } from 'react-native-reanimated';
 
-export default function LoadingScreen({ 
-  isAppReady, 
-  onExitAnimationFinish 
-}: { 
-  isAppReady: boolean; 
+export default function LoadingScreen({
+  isAppReady,
+  onExitAnimationFinish
+}: {
+  isAppReady: boolean;
   onExitAnimationFinish: () => void;
 }) {
-  
+
   useEffect(() => {
     if (isAppReady) {
       // Aguarda a animação de saída completar
@@ -18,7 +18,7 @@ export default function LoadingScreen({
         onExitAnimationFinish();
       }, 800);
     }
-  }, [isAppReady]);
+  }, [isAppReady, onExitAnimationFinish]);
 
   return (
     <MotiView
@@ -36,7 +36,7 @@ export default function LoadingScreen({
         {/* Círculo de fundo que pulsa */}
         <MotiView
           from={{ scale: 1, opacity: 0.3 }}
-          animate={{ 
+          animate={{
             scale: isAppReady ? 1.5 : [1, 1.2, 1],
             opacity: isAppReady ? 0 : [0.3, 0.15, 0.3]
           }}
@@ -52,7 +52,7 @@ export default function LoadingScreen({
         {/* Segundo círculo (efeito de onda) */}
         <MotiView
           from={{ scale: 1, opacity: 0.2 }}
-          animate={{ 
+          animate={{
             scale: isAppReady ? 1.8 : [1, 1.3, 1],
             opacity: isAppReady ? 0 : [0.2, 0.08, 0.2]
           }}
@@ -68,13 +68,13 @@ export default function LoadingScreen({
 
         {/* Kanji 月 (Lua) */}
         <MotiView
-          from={{ 
+          from={{
             translateY: 0,
             scale: 0.8,
             opacity: 0,
             rotate: '-10deg'
           }}
-          animate={{ 
+          animate={{
             translateY: isAppReady ? -100 : 0,
             scale: isAppReady ? 1.2 : 1,
             opacity: isAppReady ? 0 : 1,
@@ -112,11 +112,11 @@ export default function LoadingScreen({
 
       {/* Nome do app - TSUKIYAMI em kanji e romaji */}
       <MotiView
-        from={{ 
-          opacity: 0, 
-          translateY: 20 
+        from={{
+          opacity: 0,
+          translateY: 20
         }}
-        animate={{ 
+        animate={{
           opacity: isAppReady ? 0 : 1,
           translateY: isAppReady ? -30 : 0
         }}
@@ -139,7 +139,7 @@ export default function LoadingScreen({
         <Text className="text-5xl font-light text-black tracking-wider mb-2">
           月闇
         </Text>
-        
+
         {/* Nome em romaji */}
         <Text className="text-xl font-bold text-black tracking-widest">
           TSUKIYAMI
@@ -148,11 +148,11 @@ export default function LoadingScreen({
 
       {/* Subtítulo/Tagline */}
       <MotiView
-        from={{ 
+        from={{
           opacity: 0,
           translateY: 10
         }}
-        animate={{ 
+        animate={{
           opacity: isAppReady ? 0 : 1,
           translateY: isAppReady ? -20 : 0
         }}
@@ -182,7 +182,7 @@ export default function LoadingScreen({
           <MotiView
             key={index}
             from={{ opacity: 0.3, scale: 1 }}
-            animate={{ 
+            animate={{
               opacity: isAppReady ? 0 : [0.3, 1, 0.3],
               scale: isAppReady ? 0 : [1, 1.2, 1]
             }}

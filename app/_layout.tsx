@@ -11,6 +11,7 @@ import { AuthProvider, useAuth } from '@/context/AuthContext';
 import { ProfileProvider } from '@/context/ProfileContext';
 import { PostsProvider } from '@/context/PostsContext';
 import LoadingScreen from './_loading';
+import GlobalHeader from '@/components/global-header';
 
 // Keep the native splash screen visible
 SplashScreen.preventAutoHideAsync();
@@ -40,7 +41,7 @@ function RootLayoutNav() {
 
   return (
     <>
-      <Stack initialRouteName={session ? 'index' : 'auth'} screenOptions={{headerShown: false}}>
+      <Stack initialRouteName={session ? 'index' : 'auth'} screenOptions={{ headerShown: false }}>
         <Stack.Screen name="index" options={{ headerShown: false }} />
         <Stack.Screen name="explore" options={{ headerShown: false }} />
         <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal', headerShown: false }} />
@@ -86,7 +87,10 @@ export default function RootLayout() {
               onExitAnimationFinish={() => setIsSplashFinished(true)}
             />
           ) : (
-            <RootLayoutNav />
+            <>
+              <GlobalHeader />
+              <RootLayoutNav />
+            </>
           )}
         </PostsProvider>
       </ProfileProvider>

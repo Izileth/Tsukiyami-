@@ -71,7 +71,7 @@ const CategorySelector: React.FC<CategorySelectorProps> = ({ selectedCategories,
       </View>
       <View className="flex-row mt-2">
         <TextInput
-          placeholder="New Category"
+          placeholder="Nova Categoria"
           value={newCategory}
           onChangeText={setNewCategory}
           className="flex-1 border border-gray-300 rounded-lg p-2"
