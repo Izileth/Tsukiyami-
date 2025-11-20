@@ -9,6 +9,7 @@ import '@/utils/polyfills'; // se tiver alias configurado
 import { supabase } from '@/utils/supabase';
 import { AuthProvider, useAuth } from '@/context/AuthContext';
 import { ProfileProvider } from '@/context/ProfileContext';
+import { PostsProvider } from '@/context/PostsContext';
 import LoadingScreen from './_loading';
 
 // Keep the native splash screen visible
@@ -78,14 +79,16 @@ export default function RootLayout() {
   return (
     <AuthProvider>
       <ProfileProvider>
-        {!isSplashFinished ? (
-          <LoadingScreen
-            isAppReady={isAppReady}
-            onExitAnimationFinish={() => setIsSplashFinished(true)}
-          />
-        ) : (
-          <RootLayoutNav />
-        )}
+        <PostsProvider>
+          {!isSplashFinished ? (
+            <LoadingScreen
+              isAppReady={isAppReady}
+              onExitAnimationFinish={() => setIsSplashFinished(true)}
+            />
+          ) : (
+            <RootLayoutNav />
+          )}
+        </PostsProvider>
       </ProfileProvider>
     </AuthProvider>
   );

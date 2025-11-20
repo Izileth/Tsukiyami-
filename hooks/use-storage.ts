@@ -75,5 +75,44 @@ export const useStorage = () => {
     }
   };
 
-  return { uploading, uploadImage };
+  const uploadMultipleImages = async (
+    bucket: 'posts',
+    files: ImagePicker.ImagePickerAsset[]
+  ): Promise<string[]> => {
+    setUploading(true);
+    const urls: string[] = [];
+    try {
+      for (const image of files) {
+        const base64 = image.base64;
+        if (!base64) {
+          console.warn('Could not read image data for one of the images.');
+          continue;
+        }
+        const fileExt = image.uri.split('.').pop()?.toLowerCase() || 'jpeg';
+        const filePath = `${Date.now()}_${Math.random()}.${fileExt}`;
+        
+        const { data, error } = await supabase.storage
+          .from(bucket)
+          .upload(filePath, decode(base64), {
+            contentType: image.mimeType ?? 'image/jpeg',
+          });
+  
+        if (error) {
+          throw error;
+        }
+  
+        const { data: { publicUrl } } = supabase.storage
+          .from(bucket)
+          .getPublicUrl(data.path);
+        urls.push(publicUrl);
+      }
+    } catch (error: any) {
+      Alert.alert('Upload Error', error.message);
+    } finally {
+      setUploading(false);
+    }
+    return urls;
+  };
+
+  return { uploading, uploadImage, uploadMultipleImages };
 };

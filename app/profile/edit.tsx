@@ -4,6 +4,7 @@ import { useProfile } from '@/context/ProfileContext';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
+import { supabase } from '@/utils/supabase';
 
 const FormField = ({ 
   label, 
@@ -31,6 +32,7 @@ export default function EditProfileScreen() {
 
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
+  const [name, setName] = useState('');
   const [slug, setSlug] = useState('');
   const [email, setEmail] = useState('');
   const [bio, setBio] = useState('');
@@ -38,12 +40,18 @@ export default function EditProfileScreen() {
   const [location, setLocation] = useState('');
   const [website, setWebsite] = useState('');
   const [birthDate, setBirthDate] = useState('');
+  const [twitter, setTwitter] = useState('');
+  const [github, setGithub] = useState('');
+  const [linkedin, setLinkedin] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [updating, setUpdating] = useState(false);
 
   useEffect(() => {
     if (profile) {
       setFirstName(profile.first_name || '');
       setLastName(profile.last_name || '');
+      setName(profile.name || '');
       setSlug(profile.slug || '');
       setEmail(profile.email || '');
       setBio(profile.bio || '');
@@ -51,15 +59,24 @@ export default function EditProfileScreen() {
       setLocation(profile.location || '');
       setWebsite(profile.website || '');
       setBirthDate(profile.birth_date || '');
+      setTwitter(profile.social_media_links?.twitter || '');
+      setGithub(profile.social_media_links?.github || '');
+      setLinkedin(profile.social_media_links?.linkedin || '');
     }
   }, [profile]);
 
   const handleUpdate = async () => {
+    if (newPassword && newPassword !== confirmPassword) {
+      Alert.alert('Error', 'Passwords do not match.');
+      return;
+    }
+
     setUpdating(true);
     try {
       await updateProfile({
         first_name: firstName,
         last_name: lastName,
+        name,
         slug,
         email,
         bio,
@@ -67,7 +84,22 @@ export default function EditProfileScreen() {
         location,
         website,
         birth_date: birthDate || null,
+        social_media_links: {
+          twitter,
+          github,
+          linkedin,
+        },
       });
+
+      if (newPassword) {
+        const { error: passwordError } = await supabase.auth.updateUser({
+          password: newPassword,
+        });
+        if (passwordError) {
+          throw new Error(`Password update failed: ${passwordError.message}`);
+        }
+      }
+
       Alert.alert('Success', 'Profile updated successfully!');
       if (router.canGoBack()) {
         router.back();
@@ -116,6 +148,16 @@ export default function EditProfileScreen() {
               placeholderTextColor="#9CA3AF"
               value={lastName}
               onChangeText={setLastName}
+            />
+          </FormField>
+
+          <FormField label="Full Name" icon="person-outline">
+            <TextInput
+              className="w-full px-4 py-3.5 bg-white border border-gray-300 rounded-xl text-black"
+              placeholder="Enter your full name"
+              placeholderTextColor="#9CA3AF"
+              value={name}
+              onChangeText={setName}
             />
           </FormField>
 
@@ -211,6 +253,74 @@ export default function EditProfileScreen() {
               onChangeText={setWebsite}
               autoCapitalize="none"
               keyboardType="url"
+            />
+          </FormField>
+        </View>
+
+        {/* Social Links Section */}
+        <View className="mb-6">
+          <Text className="text-black text-lg font-bold mb-4 uppercase tracking-wide">Social Links</Text>
+
+          <FormField label="Twitter" icon="logo-twitter">
+            <TextInput
+              className="w-full px-4 py-3.5 bg-white border border-gray-300 rounded-xl text-black"
+              placeholder="https://twitter.com/username"
+              placeholderTextColor="#9CA3AF"
+              value={twitter}
+              onChangeText={setTwitter}
+              autoCapitalize="none"
+              keyboardType="url"
+            />
+          </FormField>
+
+          <FormField label="GitHub" icon="logo-github">
+            <TextInput
+              className="w-full px-4 py-3.5 bg-white border border-gray-300 rounded-xl text-black"
+              placeholder="https://github.com/username"
+              placeholderTextColor="#9CA3AF"
+              value={github}
+              onChangeText={setGithub}
+              autoCapitalize="none"
+              keyboardType="url"
+            />
+          </FormField>
+
+          <FormField label="LinkedIn" icon="logo-linkedin">
+            <TextInput
+              className="w-full px-4 py-3.5 bg-white border border-gray-300 rounded-xl text-black"
+              placeholder="https://linkedin.com/in/username"
+              placeholderTextColor="#9CA3AF"
+              value={linkedin}
+              onChangeText={setLinkedin}
+              autoCapitalize="none"
+              keyboardType="url"
+            />
+          </FormField>
+        </View>
+
+        {/* Security Section */}
+        <View className="mb-6">
+          <Text className="text-black text-lg font-bold mb-4 uppercase tracking-wide">Security</Text>
+
+          <FormField label="New Password" icon="lock-closed-outline">
+            <TextInput
+              className="w-full px-4 py-3.5 bg-white border border-gray-300 rounded-xl text-black"
+              placeholder="Enter new password"
+              placeholderTextColor="#9CA3AF"
+              value={newPassword}
+              onChangeText={setNewPassword}
+              secureTextEntry
+            />
+          </FormField>
+
+          <FormField label="Confirm Password" icon="lock-closed-outline">
+            <TextInput
+              className="w-full px-4 py-3.5 bg-white border border-gray-300 rounded-xl text-black"
+              placeholder="Confirm new password"
+              placeholderTextColor="#9CA3AF"
+              value={confirmPassword}
+              onChangeText={setConfirmPassword}
+              secureTextEntry
             />
           </FormField>
         </View>

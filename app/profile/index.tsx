@@ -3,6 +3,9 @@ import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator, Alert, Saf
 import { useProfile } from '@/context/ProfileContext';
 import { supabase } from '@/utils/supabase';
 import { useStorage } from '@/hooks/use-storage';
+import { usePosts, Post } from '@/context/PostsContext';
+import BottomSheet from '@/components/ui/bottom-sheet';
+import PostForm from '@/components/post-form';
 
 import { Link } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -84,8 +87,11 @@ const StatCard = ({
 );
 
 export default function ProfileScreen() {
-  const { profile, loading, updateProfile } = useProfile();
+  const { profile, loading: profileLoading, updateProfile } = useProfile();
   const { uploading, uploadImage } = useStorage();
+  const { posts, loading: postsLoading, deletePost } = usePosts();
+  const [isSheetVisible, setSheetVisible] = React.useState(false);
+  const [selectedPost, setSelectedPost] = React.useState<Post | null>(null);
 
   const handleUpload = (bucket: 'avatars' | 'banners') => {
     uploadImage(bucket, async (url) => {
@@ -99,7 +105,7 @@ export default function ProfileScreen() {
     });
   };
 
-  if (loading) {
+  if (uploading || profileLoading || postsLoading) {
     return (
       <View className="flex-1 justify-center items-center bg-white">
         <ActivityIndicator size="large" color="#000000" />
@@ -190,15 +196,29 @@ export default function ProfileScreen() {
               )}
             </TouchableOpacity>
 
-            {/* Edit Button */}
-            <Link href="/profile/edit" asChild>
-              <TouchableOpacity className="bg-black rounded-full py-3 px-6">
+            {/* Action Buttons */}
+            <View className="flex-row gap-2">
+              <TouchableOpacity
+                className="bg-blue-500 rounded-full py-3 px-6"
+                onPress={() => {
+                  setSelectedPost(null);
+                  setSheetVisible(true);
+                }}
+              >
                 <View className="flex-row items-center">
-                  <Ionicons name="create-outline" size={18} color="white" />
-                  <Text className="text-white font-bold ml-2">Edit Profile</Text>
+                  <Ionicons name="add" size={18} color="white" />
+                  <Text className="text-white font-bold ml-2">New Post</Text>
                 </View>
               </TouchableOpacity>
-            </Link>
+              <Link href="/profile/edit" asChild>
+                <TouchableOpacity className="bg-black rounded-full py-3 px-6">
+                  <View className="flex-row items-center">
+                    <Ionicons name="create-outline" size={18} color="white" />
+                    <Text className="text-white font-bold ml-2">Edit Profile</Text>
+                  </View>
+                </TouchableOpacity>
+              </Link>
+            </View>
           </View>
 
           {/* Name & Position */}
@@ -240,7 +260,7 @@ export default function ProfileScreen() {
 
           {/* Bio */}
           {profile?.bio && (
-            <View className="mt-4 bg-gray-50 p-4 rounded-xl border border-gray-200">
+            <View className="mt-4 bg-transparent p-4 border-l-2 border-l-gray-400">
               <Text className="text-gray-700 leading-6">{profile.bio}</Text>
             </View>
           )}
@@ -249,10 +269,42 @@ export default function ProfileScreen() {
         {/* Stats Section */}
         <View className="px-6 mb-6">
           <View className="flex-row gap-3">
-            <StatCard number="0" label="Posts" />
+            <StatCard number={posts.filter(p => p.user_id === profile?.id).length.toString()} label="Posts" />
             <StatCard number="0" label="Followers" />
             <StatCard number="0" label="Following" />
           </View>
+        </View>
+
+        {/* My Posts Section */}
+        <View className="px-6 mb-6">
+          <Text className="text-black text-lg font-bold mb-4 uppercase tracking-wide">My Posts</Text>
+          {postsLoading ? (
+            <ActivityIndicator />
+          ) : (
+            posts.filter(p => p.user_id === profile?.id).map(p => (
+              <TouchableOpacity
+                key={p.id}
+                onPress={() => {
+                  setSelectedPost(p);
+                  setSheetVisible(true);
+                }}
+                className="bg-white rounded-xl p-4 mb-3 border border-gray-200"
+              >
+                <View className="flex-row justify-between items-center">
+                  <View>
+                    <Text className="text-black font-bold text-lg">{p.title}</Text>
+                    <Text className="text-gray-500 mt-1">{p.description}</Text>
+                  </View>
+                  <TouchableOpacity onPress={() => deletePost(p.id)} className="p-2">
+                    <Ionicons name="trash-outline" size={20} color="red" />
+                  </TouchableOpacity>
+                </View>
+              </TouchableOpacity>
+            ))
+          )}
+          {posts.filter(p => p.user_id === profile?.id).length === 0 && !postsLoading && (
+            <Text className="text-gray-500 text-center">No posts yet.</Text>
+          )}
         </View>
 
         {/* Details Section */}
@@ -371,6 +423,16 @@ export default function ProfileScreen() {
           </TouchableOpacity>
         </View>
       </ScrollView>
+
+      <BottomSheet visible={isSheetVisible} onClose={() => setSheetVisible(false)}>
+        <PostForm
+          post={selectedPost}
+          onClose={() => {
+            setSheetVisible(false);
+            setSelectedPost(null);
+          }}
+        />
+      </BottomSheet>
     </SafeAreaView>
   );
 }
