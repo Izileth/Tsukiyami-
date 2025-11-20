@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { View, Text, ActivityIndicator, ScrollView, TextInput, TouchableOpacity, Image } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { usePosts } from '@/context/PostsContext';
@@ -11,19 +11,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function PostScreen() {
   const { slug } = useLocalSearchParams();
-  const { profile } = useProfile();
   const router = useRouter();
 
-  // Usar todos os contextos especializados
+  // Contextos
+  const { profile } = useProfile();
   const { getPostBySlug } = usePosts();
-  const {
-    comments,
-    loading: commentsLoading,
-    fetchComments,
-    addComment
-  } = useComments();
+  const { comments, loading: commentsLoading, fetchComments, addComment } = useComments();
   const { incrementView } = useViews();
-
   const {
     userHasLiked,
     toggleLike,
@@ -35,50 +29,48 @@ export default function PostScreen() {
     dislikesLoading
   } = useReactions();
 
-
+  // Estados locais
   const [newComment, setNewComment] = useState('');
-  const [loading, setLoading] = useState(true);
   const [focusedComment, setFocusedComment] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
 
-  // Buscar post do contexto
-  const post = getPostBySlug(slug as string);
+  // Buscar post do contexto - useMemo para evitar re-renderizações
+  const post = useMemo(() => {
+    return getPostBySlug(slug as string);
+  }, [slug, getPostBySlug]);
 
- 
-
+  // Fetch data apenas uma vez - useCallback otimizado
   const fetchPostData = useCallback(async () => {
-    if (!slug || !post) return;
-
-    setLoading(true);
+    if (!slug || !post) {
+      setInitialLoading(false);
+      return;
+    }
 
     try {
-      // Incrementar visualização usando o contexto
-      await incrementView(slug as string);
-
-      // Buscar comentários usando o contexto
-      await fetchComments(post.id);
-
-      // O contexto de likes já gerencia o estado automaticamente
-      // Não precisamos mais buscar manualmente o status de like
+      // Executar todas as operações em paralelo
+      await Promise.all([
+        incrementView(slug as string),
+        fetchComments(post.id)
+      ]);
     } catch (error) {
       console.error('Error fetching post data:', error);
     } finally {
-      setLoading(false);
+      setInitialLoading(false);
     }
-  }, [slug, post, incrementView, fetchComments]);
+  }, [slug]);
 
+  // useEffect único e otimizado
   useEffect(() => {
-    fetchPostData();
-  }, [fetchPostData]);
+    if (slug) {
+      fetchPostData();
+    }
+  }, [slug]);
 
-  useEffect(() => {
-    fetchPostData();
-  }, [slug, post, fetchPostData]);
-
+  // Handlers otimizados
   const handleAddComment = async () => {
     if (!profile || !post || newComment.trim() === '') return;
 
     const { data, error } = await addComment(post.id, newComment.trim());
-
     if (data && !error) {
       setNewComment('');
     }
@@ -89,23 +81,36 @@ export default function PostScreen() {
     await toggleLike(post.id);
   };
 
-
-
   const handleDislike = async () => {
     if (!profile || !post) return;
     await toggleDislike(post.id);
   };
 
+  // Dados calculados - useMemo para evitar recálculos
+  const currentLikesCount = useMemo(() =>
+    post ? getLikesCount(post.id) : 0,
+    [post, getLikesCount]
+  );
 
+  const currentDislikesCount = useMemo(() =>
+    post ? getDislikesCount(post.id) : 0,
+    [post, getDislikesCount]
+  );
 
-  // Usar dados dos contextos
-  const currentLikesCount = post ? getLikesCount(post.id) : 0;
-  const currentDislikesCount = post ? getDislikesCount(post.id) : 0;
-  const hasLiked = post ? userHasLiked(post.id) : false;
-  const hasDisliked = post ? userHasDisliked(post.id) : false;
+  const hasLiked = useMemo(() =>
+    post ? userHasLiked(post.id) : false,
+    [post, userHasLiked]
+  );
 
+  const hasDisliked = useMemo(() =>
+    post ? userHasDisliked(post.id) : false,
+    [post, userHasDisliked]
+  );
 
-  if (loading || commentsLoading) {
+  // Loading state unificado
+  const isLoading = initialLoading || commentsLoading;
+
+  if (isLoading) {
     return (
       <SafeAreaView className="flex-1 bg-white">
         <View className="flex-1 justify-center items-center">

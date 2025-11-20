@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { supabase } from '@/utils/supabase';
 import { PostgrestError } from '@supabase/supabase-js';
 
@@ -63,7 +63,6 @@ export const PostsProvider = ({ children }: { children: React.ReactNode }) => {
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Implementação da função fetchPosts
   const fetchPosts = useCallback(async () => {
     try {
       setLoading(true);
@@ -88,7 +87,6 @@ export const PostsProvider = ({ children }: { children: React.ReactNode }) => {
       }
 
       if (data) {
-        // Transformar os dados para o formato correto
         const formattedPosts: Post[] = data.map((post: any) => ({
           ...post,
           post_images: post.post_images || [],
@@ -99,11 +97,15 @@ export const PostsProvider = ({ children }: { children: React.ReactNode }) => {
         setPosts(formattedPosts);
       }
     } catch (error) {
-      console.error('Unexpected error fetching posts:', error);
+      console.error('Unexpected error in fetchPosts:', error);
     } finally {
       setLoading(false);
     }
   }, []);
+
+  useEffect(() => {
+    fetchPosts();
+  }, [fetchPosts]);
 
   const getPostBySlug = useCallback(
     (slug: string) => {
@@ -155,7 +157,7 @@ export const PostsProvider = ({ children }: { children: React.ReactNode }) => {
     []
   );
 
-  const createPost = async (
+  const createPost = useCallback(async (
     postData: Omit<Post, 'id' | 'created_at' | 'updated_at' | 'post_images' | 'categories' | 'tags'>,
     image_urls: string[],
     category_ids: number[],
@@ -204,9 +206,9 @@ export const PostsProvider = ({ children }: { children: React.ReactNode }) => {
     };
     setPosts((prevPosts) => [fullNewPost, ...prevPosts]);
     return { data, error: null };
-  };
+  }, []);
 
-  const updatePost = async (
+  const updatePost = useCallback(async (
     id: number,
     postData: Partial<Post>,
     image_urls: string[],
@@ -263,32 +265,32 @@ export const PostsProvider = ({ children }: { children: React.ReactNode }) => {
       prevPosts.map((post) => (post.id === id ? fullUpdatedPost : post))
     );
     return { data, error: null };
-  };
+  }, [posts]);
   
-  const deletePost = async (id: number) => {
+  const deletePost = useCallback(async (id: number) => {
     const { error } = await supabase.from('posts').delete().eq('id', id);
     if (!error) {
       setPosts(prevPosts => prevPosts.filter(p => p.id !== id));
     }
     return { error };
+  }, []);
+
+  const value = {
+    posts,
+    loading,
+    fetchPosts,
+    createPost,
+    updatePost,
+    deletePost,
+    getPostBySlug,
+    incrementPostView,
+    updatePostLikes,
+    updatePostDislikes,
+    updatePostCommentsCount,
   };
 
   return (
-    <PostsContext.Provider
-      value={{
-        posts,
-        loading,
-        fetchPosts,
-        createPost,
-        updatePost,
-        deletePost,
-        getPostBySlug,
-        incrementPostView,
-        updatePostLikes,
-        updatePostDislikes,
-        updatePostCommentsCount,
-      }}
-    >
+    <PostsContext.Provider value={value}>
       {children}
     </PostsContext.Provider>
   );
