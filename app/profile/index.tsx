@@ -137,7 +137,7 @@ export default function ProfileScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-white">
-      <StatusBar style='light' />
+      <StatusBar style='dark' />
       <ScrollView className="flex-1 " showsVerticalScrollIndicator={false}>
         {/* Banner */}
         <TouchableOpacity onPress={() => handleUpload('banners')} className="relative">

@@ -1,134 +1,111 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { View, Text, ActivityIndicator, ScrollView, TextInput, TouchableOpacity, Image } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { supabase } from '@/utils/supabase';
-import { Post, Category, Tag, PostImage } from '@/context/PostsContext';
+import { usePosts } from '@/context/PostsContext';
 import { useProfile } from '@/context/ProfileContext';
+import { useComments } from '@/context/CommentsContext';
+import { useViews } from '@/context/ViewsContext';
+import { useReactions } from '@/context/LikesContext';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
-
-interface Comment {
-  id: number;
-  content: string;
-  user_id: string;
-  created_at: string;
-  profiles: { name: string };
-}
-
-type PostWithRelations = Post & {
-  post_images: PostImage[];
-  categories: Category[];
-  tags: Tag[];
-}
 
 export default function PostScreen() {
   const { slug } = useLocalSearchParams();
   const { profile } = useProfile();
   const router = useRouter();
-  const [post, setPost] = useState<PostWithRelations | null>(null);
-  const [comments, setComments] = useState<Comment[]>([]);
+
+  // Usar todos os contextos especializados
+  const { getPostBySlug } = usePosts();
+  const {
+    comments,
+    loading: commentsLoading,
+    fetchComments,
+    addComment
+  } = useComments();
+  const { incrementView } = useViews();
+
+  const {
+    userHasLiked,
+    toggleLike,
+    getLikesCount,
+    userHasDisliked,
+    toggleDislike,
+    getDislikesCount,
+    likesLoading,
+    dislikesLoading
+  } = useReactions();
+
+
   const [newComment, setNewComment] = useState('');
   const [loading, setLoading] = useState(true);
-  const [likeStatus, setLikeStatus] = useState<'liked' | 'disliked' | null>(null);
   const [focusedComment, setFocusedComment] = useState(false);
 
-  const fetchPost = async () => {
-    if (!slug) return;
+  // Buscar post do contexto
+  const post = getPostBySlug(slug as string);
+
+ 
+
+  const fetchPostData = useCallback(async () => {
+    if (!slug || !post) return;
+
     setLoading(true);
-    await supabase.rpc('increment_view_count', { post_slug: slug });
 
-    const { data} = await supabase
-      .from('posts')
-      .select(`
-        *,
-        post_images ( id, image_url ),
-        post_categories ( categories ( id, name ) ),
-        post_tags ( tags ( id, name ) )
-      `)
-      .eq('slug', slug)
-      .single();
+    try {
+      // Incrementar visualização usando o contexto
+      await incrementView(slug as string);
 
-    if (data) {
-      const formattedData = {
-        ...data,
-        post_images: data.post_images,
-        categories: data.post_categories.map((pc: any) => pc.categories),
-        tags: data.post_tags.map((pt: any) => pt.tags),
-      };
-      setPost(formattedData);
-      fetchComments(formattedData.id);
-      if (profile) {
-        fetchLikeStatus(formattedData.id, profile.id);
-      }
+      // Buscar comentários usando o contexto
+      await fetchComments(post.id);
+
+      // O contexto de likes já gerencia o estado automaticamente
+      // Não precisamos mais buscar manualmente o status de like
+    } catch (error) {
+      console.error('Error fetching post data:', error);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
-  };
-
-  const fetchComments = async (postId: number) => {
-    const { data } = await supabase.from('comments').select(`*, profiles ( name )`).eq('post_id', postId).order('created_at', { ascending: true });
-    if (data) setComments(data as Comment[]);
-  };
-
-  const fetchLikeStatus = async (postId: number, userId: string) => {
-    const { data: likeData } = await supabase.from('likes').select('*').eq('post_id', postId).eq('user_id', userId).single();
-    if (likeData) {
-      setLikeStatus('liked');
-      return;
-    }
-    const { data: dislikeData } = await supabase.from('dislikes').select('*').eq('post_id', postId).eq('user_id', userId).single();
-    if (dislikeData) {
-      setLikeStatus('disliked');
-    }
-  };
+  }, [slug, post, incrementView, fetchComments]);
 
   useEffect(() => {
-    fetchPost();
-  }, [slug]);
+    fetchPostData();
+  }, [fetchPostData]);
+
+  useEffect(() => {
+    fetchPostData();
+  }, [slug, post, fetchPostData]);
 
   const handleAddComment = async () => {
     if (!profile || !post || newComment.trim() === '') return;
-    const { data } = await supabase.from('comments').insert({ post_id: post.id, user_id: profile.id, content: newComment.trim() }).select(`*, profiles ( name )`);
-    if (data) {
-      setComments([...comments, data[0] as Comment]);
+
+    const { data, error } = await addComment(post.id, newComment.trim());
+
+    if (data && !error) {
       setNewComment('');
     }
   };
 
   const handleLike = async () => {
     if (!profile || !post) return;
-    if (likeStatus === 'liked') {
-      await supabase.from('likes').delete().eq('post_id', post.id).eq('user_id', profile.id);
-      setPost(p => p ? { ...p, likes_count: p.likes_count - 1 } : null);
-      setLikeStatus(null);
-    } else {
-      if (likeStatus === 'disliked') {
-        await supabase.from('dislikes').delete().eq('post_id', post.id).eq('user_id', profile.id);
-        setPost(p => p ? { ...p, dislikes_count: p.dislikes_count - 1 } : null);
-      }
-      await supabase.from('likes').insert({ post_id: post.id, user_id: profile.id });
-      setPost(p => p ? { ...p, likes_count: p.likes_count + 1 } : null);
-      setLikeStatus('liked');
-    }
+    await toggleLike(post.id);
   };
+
+
 
   const handleDislike = async () => {
     if (!profile || !post) return;
-    if (likeStatus === 'disliked') {
-      await supabase.from('dislikes').delete().eq('post_id', post.id).eq('user_id', profile.id);
-      setPost(p => p ? { ...p, dislikes_count: p.dislikes_count - 1 } : null);
-      setLikeStatus(null);
-    } else {
-      if (likeStatus === 'liked') {
-        await supabase.from('likes').delete().eq('post_id', post.id).eq('user_id', profile.id);
-        setPost(p => p ? { ...p, likes_count: p.likes_count - 1 } : null);
-      }
-      await supabase.from('dislikes').insert({ post_id: post.id, user_id: profile.id });
-      setPost(p => p ? { ...p, dislikes_count: p.dislikes_count + 1 } : null);
-      setLikeStatus('disliked');
-    }
+    await toggleDislike(post.id);
   };
 
-  if (loading) {
+
+
+  // Usar dados dos contextos
+  const currentLikesCount = post ? getLikesCount(post.id) : 0;
+  const currentDislikesCount = post ? getDislikesCount(post.id) : 0;
+  const hasLiked = post ? userHasLiked(post.id) : false;
+  const hasDisliked = post ? userHasDisliked(post.id) : false;
+
+
+  if (loading || commentsLoading) {
     return (
       <SafeAreaView className="flex-1 bg-white">
         <View className="flex-1 justify-center items-center">
@@ -177,7 +154,6 @@ export default function PostScreen() {
 
         {/* Content */}
         <View className="px-6">
-
           {/* Title */}
           <Text className="text-4xl font-bold text-black mb-4 leading-tight tracking-tight">
             {post.title}
@@ -210,7 +186,9 @@ export default function PostScreen() {
 
               {post.tags.length > 4 && (
                 <View className="bg-gray-100 border border-gray-300 px-4 py-2 rounded-full mr-2 mb-2">
-                  <Text className="text-black/70 text-xs font-medium">( +{post.tags.length - 4} )</Text>
+                  <Text className="text-black/70 text-xs font-medium">
+                    ( +{post.tags.length - 4} )
+                  </Text>
                 </View>
               )}
             </View>
@@ -218,7 +196,6 @@ export default function PostScreen() {
 
           {/* Stats */}
           <View className="flex-row items-center py-4 mb-8 border-t border-b border-gray-100">
-
             {/* Views */}
             <View className="flex-row items-center mr-8">
               <Ionicons name="eye-outline" size={20} color="#666" />
@@ -232,17 +209,18 @@ export default function PostScreen() {
               onPress={handleLike}
               className="flex-row items-center mr-8"
               activeOpacity={0.7}
+              disabled={likesLoading}
             >
               <Ionicons
-                name={likeStatus === 'liked' ? 'heart' : 'heart-outline'}
+                name={hasLiked ? 'heart' : 'heart-outline'}
                 size={20}
-                color={likeStatus === 'liked' ? '#000' : '#666'}
+                color={hasLiked ? '#000' : '#666'}
               />
               <Text
-                className={`text-sm ml-2 font-medium ${likeStatus === 'liked' ? 'text-black' : 'text-black/60'
+                className={`text-sm ml-2 font-medium ${hasLiked ? 'text-black' : 'text-black/60'
                   }`}
               >
-                {post.likes_count}
+                {currentLikesCount}
               </Text>
             </TouchableOpacity>
 
@@ -251,24 +229,20 @@ export default function PostScreen() {
               onPress={handleDislike}
               className="flex-row items-center"
               activeOpacity={0.7}
+              disabled={dislikesLoading}
             >
               <Ionicons
-                name={
-                  likeStatus === 'disliked'
-                    ? 'heart-dislike'
-                    : 'heart-dislike-outline'
-                }
+                name={hasDisliked ? 'heart-dislike' : 'heart-dislike-outline'}
                 size={20}
-                color={likeStatus === 'disliked' ? '#000' : '#666'}
+                color={hasDisliked ? '#000' : '#666'}
               />
               <Text
-                className={`text-sm ml-2 font-medium ${likeStatus === 'disliked' ? 'text-black' : 'text-black/60'
+                className={`text-sm ml-2 font-medium ${hasDisliked ? 'text-black' : 'text-black/60'
                   }`}
               >
-                {post.dislikes_count}
+                {currentDislikesCount}
               </Text>
             </TouchableOpacity>
-
           </View>
 
           {/* Content */}
@@ -280,15 +254,18 @@ export default function PostScreen() {
 
           {/* Comments */}
           <View>
-
             {/* Header */}
             <View className="flex-row items-center justify-between mb-6">
               <View className="flex-row items-center">
                 <Ionicons name="chatbubbles-outline" size={26} color="#000" />
-                <Text className="text-2xl font-bold text-black ml-3">Comentários</Text>
+                <Text className="text-2xl font-bold text-black ml-3">
+                  Comentários
+                </Text>
               </View>
               <View className="bg-black px-3 py-1.5 rounded-full">
-                <Text className="text-white text-xs font-bold">{comments.length}</Text>
+                <Text className="text-white text-xs font-bold">
+                  {comments.length}
+                </Text>
               </View>
             </View>
 
@@ -303,22 +280,25 @@ export default function PostScreen() {
                     <View className="flex-row items-center mb-2">
                       <View className="w-8 h-8 bg-black rounded-full justify-center items-center mr-3">
                         <Text className="text-white text-xs font-bold">
-                          {comment.profiles.name.charAt(0).toUpperCase()}
+                          {comment.profiles?.name?.charAt(0).toUpperCase() || 'U'}
                         </Text>
                       </View>
 
                       <View className="flex-1">
                         <Text className="text-black font-bold text-sm">
-                          {comment.profiles.name}
+                          {comment.profiles?.name || 'Usuário'}
                         </Text>
 
                         <Text className="text-black/40 text-xs mt-1">
-                          {new Date(comment.created_at).toLocaleDateString("pt-BR", {
-                            day: "2-digit",
-                            month: "short",
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
+                          {new Date(comment.created_at).toLocaleDateString(
+                            'pt-BR',
+                            {
+                              day: '2-digit',
+                              month: 'short',
+                              hour: '2-digit',
+                              minute: '2-digit',
+                            }
+                          )}
                         </Text>
                       </View>
                     </View>
@@ -355,7 +335,7 @@ export default function PostScreen() {
                       onFocus={() => setFocusedComment(true)}
                       onBlur={() => setFocusedComment(false)}
                       multiline
-                      className={`bg-gray-50 border-2 rounded-xl px-4 py-3 text-base min-h-[100px] ${focusedComment ? "border-black" : "border-gray-200"
+                      className={`bg-gray-50 border-2 rounded-xl px-4 py-3 text-base min-h-[100px] ${focusedComment ? 'border-black' : 'border-gray-200'
                         } text-black`}
                       textAlignVertical="top"
                     />
@@ -363,15 +343,15 @@ export default function PostScreen() {
 
                   <TouchableOpacity
                     onPress={handleAddComment}
-                    disabled={!newComment.trim()}
-                    className={`w-12 h-12 rounded-xl justify-center items-center ${newComment.trim() ? "bg-black" : "bg-gray-300"
+                    disabled={!newComment.trim() || commentsLoading}
+                    className={`w-12 h-12 rounded-xl justify-center items-center ${newComment.trim() && !commentsLoading ? 'bg-black' : 'bg-gray-300'
                       }`}
                     activeOpacity={0.7}
                   >
                     <Ionicons
                       name="send"
                       size={20}
-                      color={newComment.trim() ? "#fff" : "#999"}
+                      color={newComment.trim() && !commentsLoading ? '#fff' : '#999'}
                     />
                   </TouchableOpacity>
                 </View>
@@ -384,7 +364,7 @@ export default function PostScreen() {
                 </Text>
 
                 <TouchableOpacity
-                  onPress={() => router.push("/auth")}
+                  onPress={() => router.push('/auth')}
                   className="bg-black px-6 py-3 rounded-xl"
                   activeOpacity={0.7}
                 >
@@ -396,6 +376,5 @@ export default function PostScreen() {
         </View>
       </ScrollView>
     </SafeAreaView>
-
   );
 }

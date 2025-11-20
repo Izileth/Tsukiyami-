@@ -82,6 +82,7 @@ const PostForm: React.FC<PostFormProps> = ({ post, onClose }) => {
       likes_count: 0,
       dislikes_count: 0,
       views_count: 0,
+      comments_count: 0,
     };
 
     if (post) {

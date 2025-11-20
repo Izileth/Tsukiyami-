@@ -10,6 +10,9 @@ import { supabase } from '@/utils/supabase';
 import { AuthProvider, useAuth } from '@/context/AuthContext';
 import { ProfileProvider } from '@/context/ProfileContext';
 import { PostsProvider } from '@/context/PostsContext';
+import { CommentsProvider } from '@/context/CommentsContext';
+import { ReactionsProvider } from '@/context/LikesContext';
+import { ViewsProvider } from '@/context/ViewsContext';
 import LoadingScreen from './_loading';
 import GlobalHeader from '@/components/global-header';
 
@@ -81,17 +84,23 @@ export default function RootLayout() {
     <AuthProvider>
       <ProfileProvider>
         <PostsProvider>
-          {!isSplashFinished ? (
-            <LoadingScreen
-              isAppReady={isAppReady}
-              onExitAnimationFinish={() => setIsSplashFinished(true)}
-            />
-          ) : (
-            <>
-              <GlobalHeader />
-              <RootLayoutNav />
-            </>
-          )}
+          <CommentsProvider>
+            <ReactionsProvider>
+              <ViewsProvider>
+                {!isSplashFinished ? (
+                  <LoadingScreen
+                    isAppReady={isAppReady}
+                    onExitAnimationFinish={() => setIsSplashFinished(true)}
+                  />
+                ) : (
+                  <>
+                    <GlobalHeader />
+                    <RootLayoutNav />
+                  </>
+                )}
+              </ViewsProvider>
+            </ReactionsProvider>
+          </CommentsProvider>
         </PostsProvider>
       </ProfileProvider>
     </AuthProvider>

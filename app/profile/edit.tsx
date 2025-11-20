@@ -128,7 +128,7 @@ export default function EditProfileScreen() {
         showsVerticalScrollIndicator={false}
       >
         {/* Personal Information Section */}
-        <View className="mb-6 mt-16">
+        <View className="mb-6">
           <Text className="text-black text-lg font-bold mb-4 uppercase tracking-wide">Personal Information</Text>
           
           <FormField label="First Name" icon="person-outline">
