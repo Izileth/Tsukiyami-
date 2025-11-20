@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, Alert, ScrollView } from 'react-native';
 import { Link } from 'expo-router';
 import { MotiView } from 'moti';
+import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '@/utils/supabase';
 
 export default function RegisterScreen() {
@@ -9,13 +10,28 @@ export default function RegisterScreen() {
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [focusedInput, setFocusedInput] = useState(null);
 
   async function signUpWithEmail() {
     if (!firstName || !lastName || !email || !password) {
-      Alert.alert('Error', 'Please fill in all fields.');
+      Alert.alert('Erro', 'Por favor, preencha todos os campos.');
       return;
     }
+    
+    if (password !== confirmPassword) {
+      Alert.alert('Erro', 'As senhas não coincidem.');
+      return;
+    }
+    
+    if (password.length < 6) {
+      Alert.alert('Erro', 'A senha deve ter pelo menos 6 caracteres.');
+      return;
+    }
+    
     setLoading(true);
     const { data, error } = await supabase.auth.signUp({
       email: email,
@@ -29,129 +45,258 @@ export default function RegisterScreen() {
     });
 
     if (error) {
-      Alert.alert('Error', error.message);
+      Alert.alert('Erro', error.message);
     } else if (data.session) {
-      Alert.alert('Success', 'You are now signed in!');
+      Alert.alert('Sucesso', 'Você está logado!');
     } else if (data.user) {
-      Alert.alert('Success', 'Please check your email to confirm your account!');
+      Alert.alert('Sucesso', 'Verifique seu email para confirmar sua conta!');
     }
     
     setLoading(false);
   }
 
   return (
-    <View className="flex-1 justify-center items-center bg-white px-6">
-      {/* Logo com Kanji */}
-      <MotiView
-        from={{ opacity: 0, translateY: -20 }}
-        animate={{ opacity: 1, translateY: 0 }}
-        transition={{ type: 'timing', duration: 800, delay: 100 }}
-        className="items-center mb-12"
-      >
-        <View className="w-20 h-20 bg-black rounded-2xl justify-center items-center mb-4 shadow-md">
-          <Text className="text-white text-4xl font-light">月</Text>
-        </View>
-        
-        <Text className="text-3xl font-light text-black tracking-wider mb-1">
-          月闇
-        </Text>
-        <Text className="text-lg font-bold text-black tracking-widest">
-          TSUKIYAMI
-        </Text>
-      </MotiView>
+    <ScrollView 
+      className="flex-1 bg-white"
+      contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', paddingHorizontal: 24, paddingVertical: 40 }}
+      showsVerticalScrollIndicator={false}
+    >
 
       {/* Card do formulário */}
       <MotiView
-        from={{ opacity: 0, scale: 0.95 }}
+        from={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
-        transition={{ type: 'timing', duration: 600, delay: 300 }}
-        className="w-full max-w-md"
+        transition={{ type: 'timing', duration: 600, delay: 500 }}
+        className="w-full"
       >
-        <Text className="text-2xl font-bold text-black mb-2 tracking-tight">
-          Criar Sua Conta
-        </Text>
-        <Text className="text-sm text-black/50 mb-8 tracking-wide">
-          Junte-se a nós e compartilhe sua paixão
-        </Text>
+        {/* Cabeçalho */}
+        <View className="mb-8">
+          <Text className="text-3xl font-bold text-black mb-2 tracking-tight">
+            Comece sua jornada
+          </Text>
+          <Text className="text-base text-black/50">
+            Crie sua conta em poucos passos
+          </Text>
+        </View>
         
         {/* Input de Nome */}
         <View className="mb-4">
-          <Text className="text-xs text-black/70 mb-2 tracking-widest uppercase font-medium">
-            First Name
+          <Text className="text-xs text-black/70 mb-3 tracking-[2px] uppercase font-semibold">
+            Primeiro Nome
           </Text>
-          <TextInput
-            className="w-full px-4 py-4 bg-black/5 border-2 border-black/10 rounded-xl text-base text-black focus:border-black"
-            placeholder="Your first name"
-            placeholderTextColor="#00000040"
-            value={firstName}
-            onChangeText={setFirstName}
-            autoCapitalize="words"
-          />
+          <View className="relative">
+            <View className="absolute left-4 top-4 z-10">
+              <Ionicons 
+                name="person-outline" 
+                size={20} 
+                color={focusedInput === 'firstName' ? '#000000' : '#999999'} 
+              />
+            </View>
+            <TextInput
+              className={`w-full pl-12 pr-4 py-4 bg-gray-50 border-2 ${
+                focusedInput === 'firstName' ? 'border-black bg-white' : 'border-gray-200'
+              } rounded-2xl text-base text-black`}
+              placeholder="Seu primeiro nome"
+              placeholderTextColor="#999999"
+              value={firstName}
+              onChangeText={setFirstName}
+              onFocus={() => setFocusedInput('firstName')}
+              onBlur={() => setFocusedInput(null)}
+              autoCapitalize="words"
+            />
+          </View>
         </View>
 
+        {/* Input de Sobrenome */}
         <View className="mb-4">
-          <Text className="text-xs text-black/70 mb-2 tracking-widest uppercase font-medium">
-            Last Name
+          <Text className="text-xs text-black/70 mb-3 tracking-[2px] uppercase font-semibold">
+            Sobrenome
           </Text>
-          <TextInput
-            className="w-full px-4 py-4 bg-black/5 border-2 border-black/10 rounded-xl text-base text-black focus:border-black"
-            placeholder="Your last name"
-            placeholderTextColor="#00000040"
-            value={lastName}
-            onChangeText={setLastName}
-            autoCapitalize="words"
-          />
+          <View className="relative">
+            <View className="absolute left-4 top-4 z-10">
+              <Ionicons 
+                name="person-outline" 
+                size={20} 
+                color={focusedInput === 'lastName' ? '#000000' : '#999999'} 
+              />
+            </View>
+            <TextInput
+              className={`w-full pl-12 pr-4 py-4 bg-gray-50 border-2 ${
+                focusedInput === 'lastName' ? 'border-black bg-white' : 'border-gray-200'
+              } rounded-2xl text-base text-black`}
+              placeholder="Seu sobrenome"
+              placeholderTextColor="#999999"
+              value={lastName}
+              onChangeText={setLastName}
+              onFocus={() => setFocusedInput('lastName')}
+              onBlur={() => setFocusedInput(null)}
+              autoCapitalize="words"
+            />
+          </View>
         </View>
 
         {/* Input de Email */}
         <View className="mb-4">
-          <Text className="text-xs text-black/70 mb-2 tracking-widest uppercase font-medium">
+          <Text className="text-xs text-black/70 mb-3 tracking-[2px] uppercase font-semibold">
             Email
           </Text>
-          <TextInput
-            className="w-full px-4 py-4 bg-black/5 border-2 border-black/10 rounded-xl text-base text-black focus:border-black"
-            placeholder="your@email.com"
-            placeholderTextColor="#00000040"
-            value={email}
-            onChangeText={setEmail}
-            autoCapitalize="none"
-            keyboardType="email-address"
-          />
+          <View className="relative">
+            <View className="absolute left-4 top-4 z-10">
+              <Ionicons 
+                name="mail-outline" 
+                size={20} 
+                color={focusedInput === 'email' ? '#000000' : '#999999'} 
+              />
+            </View>
+            <TextInput
+              className={`w-full pl-12 pr-4 py-4 bg-gray-50 border-2 ${
+                focusedInput === 'email' ? 'border-black bg-white' : 'border-gray-200'
+              } rounded-2xl text-base text-black`}
+              placeholder="seu@email.com"
+              placeholderTextColor="#999999"
+              value={email}
+              onChangeText={setEmail}
+              onFocus={() => setFocusedInput('email')}
+              onBlur={() => setFocusedInput(null)}
+              autoCapitalize="none"
+              keyboardType="email-address"
+            />
+          </View>
         </View>
         
         {/* Input de Senha */}
-        <View className="mb-6">
-          <Text className="text-xs text-black/70 mb-2 tracking-widest uppercase font-medium">
+        <View className="mb-4">
+          <Text className="text-xs text-black/70 mb-3 tracking-[2px] uppercase font-semibold">
             Senha
           </Text>
-          <TextInput
-            className="w-full px-4 py-4 bg-black/5 border-2 border-black/10 rounded-xl text-base text-black focus:border-black"
-            placeholder="••••••••"
-            placeholderTextColor="#00000040"
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-          />
+          <View className="relative">
+            <View className="absolute left-4 top-4 z-10">
+              <Ionicons 
+                name="lock-closed-outline" 
+                size={20} 
+                color={focusedInput === 'password' ? '#000000' : '#999999'} 
+              />
+            </View>
+            <TextInput
+              className={`w-full pl-12 pr-12 py-4 bg-gray-50 border-2 ${
+                focusedInput === 'password' ? 'border-black bg-white' : 'border-gray-200'
+              } rounded-2xl text-base text-black`}
+              placeholder="••••••••"
+              placeholderTextColor="#999999"
+              value={password}
+              onChangeText={setPassword}
+              onFocus={() => setFocusedInput('password')}
+              onBlur={() => setFocusedInput(null)}
+              secureTextEntry={!showPassword}
+            />
+            <TouchableOpacity 
+              className="absolute right-4 top-4"
+              onPress={() => setShowPassword(!showPassword)}
+              activeOpacity={0.7}
+            >
+              <Ionicons 
+                name={showPassword ? 'eye-off-outline' : 'eye-outline'} 
+                size={20} 
+                color="#999999" 
+              />
+            </TouchableOpacity>
+          </View>
+          {password.length > 0 && password.length < 6 && (
+            <Text className="text-xs text-red-500 mt-2 ml-1">
+              A senha deve ter pelo menos 6 caracteres
+            </Text>
+          )}
+        </View>
+        
+        {/* Input de Confirmar Senha */}
+        <View className="mb-3">
+          <Text className="text-xs text-black/70 mb-3 tracking-[2px] uppercase font-semibold">
+            Confirmar Senha
+          </Text>
+          <View className="relative">
+            <View className="absolute left-4 top-4 z-10">
+              <Ionicons 
+                name="lock-closed-outline" 
+                size={20} 
+                color={focusedInput === 'confirmPassword' ? '#000000' : '#999999'} 
+              />
+            </View>
+            <TextInput
+              className={`w-full pl-12 pr-12 py-4 bg-gray-50 border-2 ${
+                focusedInput === 'confirmPassword' ? 'border-black bg-white' : 'border-gray-200'
+              } rounded-2xl text-base text-black`}
+              placeholder="••••••••"
+              placeholderTextColor="#999999"
+              value={confirmPassword}
+              onChangeText={setConfirmPassword}
+              onFocus={() => setFocusedInput('confirmPassword')}
+              onBlur={() => setFocusedInput(null)}
+              secureTextEntry={!showConfirmPassword}
+            />
+            <TouchableOpacity 
+              className="absolute right-4 top-4"
+              onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+              activeOpacity={0.7}
+            >
+              <Ionicons 
+                name={showConfirmPassword ? 'eye-off-outline' : 'eye-outline'} 
+                size={20} 
+                color="#999999" 
+              />
+            </TouchableOpacity>
+          </View>
+          {confirmPassword.length > 0 && password !== confirmPassword && (
+            <Text className="text-xs text-red-500 mt-2 ml-1">
+              As senhas não coincidem
+            </Text>
+          )}
         </View>
         
         {/* Botão de Registro */}
-        <TouchableOpacity
-          className={`w-full py-4 rounded-xl ${loading ? 'bg-black/50' : 'bg-black'} shadow-lg`}
-          onPress={signUpWithEmail}
-          disabled={loading}
-          activeOpacity={0.8}
+        <MotiView
+          from={{ opacity: 0, translateY: 20 }}
+          animate={{ opacity: 1, translateY: 0 }}
+          transition={{ type: 'timing', duration: 400, delay: 700 }}
         >
-          <Text className="text-white text-center font-bold text-base tracking-wider">
-            {loading ? 'CRIANDO CONTA...' : 'CRIAR CONTA'}
-          </Text>
-        </TouchableOpacity>
+          <TouchableOpacity
+            className={`w-full py-5 rounded-2xl mt-6 ${
+              loading ? 'bg-gray-300' : 'bg-black'
+            } shadow-lg`}
+            onPress={signUpWithEmail}
+            disabled={loading}
+            activeOpacity={0.8}
+          >
+            <View className="flex-row items-center justify-center">
+              {loading && (
+                <View className="mr-2">
+                  <Ionicons name="hourglass-outline" size={18} color="white" />
+                </View>
+              )}
+              <Text className="text-white text-center font-bold text-base tracking-[3px]">
+                {loading ? 'CRIANDO...' : 'CRIAR CONTA'}
+              </Text>
+              {!loading && (
+                <View className="ml-2">
+                  <Ionicons name="arrow-forward" size={18} color="white" />
+                </View>
+              )}
+            </View>
+          </TouchableOpacity>
+        </MotiView>
+
+        {/* Divider */}
+        <View className="flex-row items-center my-8">
+          <View className="flex-1 h-[1px] bg-gray-200" />
+          <Text className="mx-4 text-xs text-gray-400 font-medium">OU</Text>
+          <View className="flex-1 h-[1px] bg-gray-200" />
+        </View>
 
         {/* Link para login */}
-        <View className="flex-row justify-center mt-8 items-center">
-          <Text className="text-black/60 text-sm">Already have an account? </Text>
+        <View className="flex-row justify-center items-center">
+          <Text className="text-black/60 text-sm">Já possui uma conta? </Text>
           <Link href="/auth" asChild>
-            <TouchableOpacity>
-              <Text className="text-black  underline font-bold text-sm tracking-wide">
+            <TouchableOpacity activeOpacity={0.7}>
+              <Text className="text-black font-bold text-sm tracking-wide">
                 Entrar
               </Text>
             </TouchableOpacity>
@@ -161,11 +306,18 @@ export default function RegisterScreen() {
 
       {/* Decoração minimalista */}
       <MotiView
-        from={{ opacity: 0 }}
-        animate={{ opacity: 0.05 }}
-        transition={{ type: 'timing', duration: 1200, delay: 600 }}
+        from={{ opacity: 0, scale: 0.8 }}
+        animate={{ opacity: 0.03, scale: 1 }}
+        transition={{ type: 'timing', duration: 1500, delay: 800 }}
+        className="absolute bottom-0 right-0 w-80 h-80 bg-black rounded-full -mr-40 -mb-40"
+      />
+      
+      <MotiView
+        from={{ opacity: 0, scale: 0.8 }}
+        animate={{ opacity: 0.02, scale: 1 }}
+        transition={{ type: 'timing', duration: 1500, delay: 1000 }}
         className="absolute top-0 left-0 w-64 h-64 bg-black rounded-full -ml-32 -mt-32"
       />
-    </View>
+    </ScrollView>
   );
 }

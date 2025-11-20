@@ -66,7 +66,7 @@ export default function EditProfileScreen() {
         position,
         location,
         website,
-        birth_date: birthDate,
+        birth_date: birthDate || null,
       });
       Alert.alert('Success', 'Profile updated successfully!');
       if (router.canGoBack()) {
@@ -90,31 +90,13 @@ export default function EditProfileScreen() {
   return (
     <SafeAreaView className="flex-1 bg-white">
       <StatusBar style="dark" />
-      
-      {/* Header */}
-      <View className="px-6 py-4 border-b border-gray-200">
-        <View className="flex-row items-center justify-between">
-          <View className="flex-row items-center">
-            <TouchableOpacity 
-              onPress={() => router.back()} 
-              className="mr-4 p-2"
-            >
-              <Ionicons name="arrow-back" size={24} color="black" />
-            </TouchableOpacity>
-            <View>
-              <Text className="text-black text-2xl font-bold">Edit Profile</Text>
-              <Text className="text-gray-500 text-sm mt-1">Update your information</Text>
-            </View>
-          </View>
-        </View>
-      </View>
 
       <ScrollView 
         className="flex-1 px-6 pt-6" 
         showsVerticalScrollIndicator={false}
       >
         {/* Personal Information Section */}
-        <View className="mb-6">
+        <View className="mb-6 mt-16">
           <Text className="text-black text-lg font-bold mb-4 uppercase tracking-wide">Personal Information</Text>
           
           <FormField label="First Name" icon="person-outline">

@@ -1,15 +1,14 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator, Alert, SafeAreaView } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator, Alert, SafeAreaView, Image } from 'react-native';
 import { useProfile } from '@/context/ProfileContext';
 import { supabase } from '@/utils/supabase';
 import { useStorage } from '@/hooks/use-storage';
-import { Image } from 'expo-image';
+
 import { Link } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
 import Svg, { Path, Circle, Rect } from 'react-native-svg';
 
-const blurhash = 'L5H2EC=PM+yV0g-mq.wG9c010J}I';
 
 // Ilustração SVG para Banner vazio
 const EmptyBannerIllustration = () => (
@@ -132,21 +131,16 @@ export default function ProfileScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-white">
-      <StatusBar style="dark" />
-      <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+      <StatusBar style='light' />
+      <ScrollView className="flex-1 " showsVerticalScrollIndicator={false}>
         {/* Banner */}
-        <TouchableOpacity onPress={() => handleUpload('banners')} className="relative">
+        <TouchableOpacity  onPress={() => handleUpload('banners')} className="relative">
           {hasBanner ? (
             <Image
+              key={profile?.banner_url}
               source={{ uri: profile?.banner_url }}
-              placeholder={{ blurhash }}
-              className="w-full h-48"
-              contentFit="cover"
-              transition={200}
-              cachePolicy="memory-disk"
-              onLoadStart={() => console.log('Banner loading started')}
-              onLoad={() => console.log('Banner loaded successfully')}
-              onError={(e) => console.error('Banner Image Error:', e)}
+              style={{ width: '100%', height: 192 }}
+              resizeMode="cover"
             />
           ) : (
             <View className="w-full h-48 bg-gray-50">
@@ -165,7 +159,7 @@ export default function ProfileScreen() {
         </TouchableOpacity>
 
         {/* Profile Header */}
-        <View className="px-6 -mt-16 mb-6">
+        <View className="px-6 -mt-14 mb-6">
           <View className="flex-row justify-between items-end">
             {/* Avatar */}
             <TouchableOpacity 
@@ -175,15 +169,10 @@ export default function ProfileScreen() {
               <View className="rounded-full border-4 border-white shadow-sm bg-white">
                 {hasAvatar ? (
                   <Image
+                    key={profile?.avatar_url}
                     source={{ uri: profile?.avatar_url }}
-                    placeholder={{ blurhash }}
-                    className="w-28 h-28 rounded-full"
-                    contentFit="cover"
-                    transition={200}
-                    cachePolicy="memory-disk"
-                    onLoadStart={() => console.log('Avatar loading started')}
-                    onLoad={() => console.log('Avatar loaded successfully')}
-                    onError={(e) => console.error('Avatar Image Error:', e)}
+                    style={{ width: 112, height: 112, borderRadius: 56 }}
+                    resizeMode="cover"
                   />
                 ) : (
                   <View className="w-28 h-28 rounded-full overflow-hidden">

@@ -13,7 +13,7 @@ export type Profile = {
   social_media_links?: any;
   website?: string;
   location?: string;
-  birth_date?: string; // ISO date string
+  birth_date?: string | null; // ISO date string
   updated_at?: string; // ISO date-time string
   created_at?: string; // ISO date-time string
   slug?: string;
