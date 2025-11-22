@@ -12,7 +12,6 @@ import { ProfileProvider } from '@/context/ProfileContext';
 import { PostsProvider } from '@/context/PostsContext';
 import { CommentsProvider } from '@/context/CommentsContext';
 import { ReactionsProvider } from '@/context/LikesContext';
-import { ViewsProvider } from '@/context/ViewsContext';
 import LoadingScreen from './_loading';
 import GlobalHeader from '@/components/global-header';
 
@@ -85,7 +84,6 @@ export default function RootLayout() {
         <PostsProvider>
           <CommentsProvider>
             <ReactionsProvider>
-              <ViewsProvider>
                 {!isSplashFinished ? (
                   <LoadingScreen
                     isAppReady={isAppReady}
@@ -97,7 +95,6 @@ export default function RootLayout() {
                     <RootLayoutNav />
                   </>
                 )}
-              </ViewsProvider>
             </ReactionsProvider>
           </CommentsProvider>
         </PostsProvider>

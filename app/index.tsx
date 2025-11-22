@@ -2,14 +2,10 @@ import { View, Text, ScrollView, ActivityIndicator, TouchableOpacity, Image, Saf
 import { Link } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { usePosts } from "@/context/PostsContext";
-import { useReactions } from "@/context/LikesContext";
-import { useViews } from "@/context/ViewsContext";
 import { Ionicons } from "@expo/vector-icons";
 
 export default function HomeScreen() {
   const { posts, loading } = usePosts();
-  const { getLikesCount, getDislikesCount } = useReactions();
-  const { getViewsCount } = useViews();
 
   if (loading) {
     return (
@@ -51,15 +47,10 @@ export default function HomeScreen() {
             </View>
           ) : (
             posts.map((post, index) => {
-              // Usar dados dos contextos para estatísticas em tempo real
-              const currentLikesCount = getLikesCount(post.id);
-              const currentDislikesCount = getDislikesCount(post.id);
-              const currentViewsCount = getViewsCount(post.id);
-              
-              // Usar dados do contexto ou fallback para os dados do post
-              const displayLikes = currentLikesCount > 0 ? currentLikesCount : post.likes_count;
-              const displayDislikes = currentDislikesCount > 0 ? currentDislikesCount : post.dislikes_count;
-              const displayViews = currentViewsCount > 0 ? currentViewsCount : post.views_count;
+              // As contagens agora vêm diretamente do objeto post
+              const displayViews = post.views_count || 0;
+              const displayLikes = post.likes_count || 0;
+              const displayDislikes = post.dislikes_count || 0;
 
               return (
                 <Link key={post.id} href={{
@@ -84,23 +75,23 @@ export default function HomeScreen() {
                     {/* Content Container */}
                   <View className="px-1">
                     {/* Author Info */}
-                    {post.profiles && (
+                    {post.profile && (
                       <Link href={{
                         pathname: '/profile/[slug]',
-                        params: { slug: post?.profiles?.slug  || ''}
+                        params: { slug: post?.profile?.slug  || ''}
                       }} asChild>
                         <TouchableOpacity className="flex-row items-center mb-4">
                           <Image
-                            source={{ uri: post.profiles.avatar_url || 'https://via.placeholder.com/40' }} // Placeholder for no avatar
+                            source={{ uri: post.profile.avatar_url || 'https://via.placeholder.com/40' }} // Placeholder for no avatar
                             className="w-10 h-10 rounded-full mr-3"
                           />
                           <View>
                             <Text className="text-sm font-semibold text-black">
-                              {post.profiles.name || post.profiles.first_name || 'Usuário Anônimo'}
+                              {post.profile.name || post.profile.first_name || 'Usuário Anônimo'}
                             </Text>
-                            {post.profiles.slug && (
+                            {post.profile.slug && (
                               <Text className="text-xs text-black/60">
-                                @{post.profiles.slug}
+                                @{post.profile.slug}
                               </Text>
                             )}
                           </View>

@@ -1,251 +1,159 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/utils/supabase';
-
-// --- Interfaces ---
-export interface Like {
-  user_id: string;
-  post_id: number;
-  created_at: string;
-}
-
-export interface Dislike {
-  user_id: string;
-  post_id: number;
-  created_at: string;
-}
+import { usePosts } from './PostsContext';
 
 interface ReactionsContextType {
-  // Likes
-  userHasLiked: (postId: number) => boolean;
+  userLikes: Set<number>;
+  userDislikes: Set<number>;
+  isLiking: (postId: number) => boolean;
+  isDisliking: (postId: number) => boolean;
   toggleLike: (postId: number) => Promise<void>;
-  getLikesCount: (postId: number) => number;
-  
-  // Dislikes
-  userHasDisliked: (postId: number) => boolean;
   toggleDislike: (postId: number) => Promise<void>;
-  getDislikesCount: (postId: number) => number;
-  
-  // Loading states
-  loading: boolean;
-  likesLoading: boolean;
-  dislikesLoading: boolean;
+  loadingPostId: number | null;
 }
 
 const ReactionsContext = createContext<ReactionsContextType | undefined>(undefined);
 
 export const useReactions = () => {
   const context = useContext(ReactionsContext);
-  if (!context) {
-    throw new Error('useReactions must be used within a ReactionsProvider');
-  }
+  if (!context) throw new Error('useReactions must be used within a ReactionsProvider');
   return context;
 };
 
 export const ReactionsProvider = ({ children }: { children: React.ReactNode }) => {
-  // Likes state
-  const [userLikes, setUserLikes] = useState<Set<number>>(new Set());
-  const [likesCount, setLikesCount] = useState<Map<number, number>>(new Map());
-  const [likesLoading, setLikesLoading] = useState(false);
-
-  // Dislikes state
-  const [userDislikes, setUserDislikes] = useState<Set<number>>(new Set());
-  const [dislikesCount, setDislikesCount] = useState<Map<number, number>>(new Map());
-  const [dislikesLoading, setDislikesLoading] = useState(false);
-
+  const { posts, updatePostLikes, updatePostDislikes } = usePosts();
+  
   const [userId, setUserId] = useState<string | null>(null);
+  const [userLikes, setUserLikes] = useState<Set<number>>(new Set());
+  const [userDislikes, setUserDislikes] = useState<Set<number>>(new Set());
+  const [loadingPostId, setLoadingPostId] = useState<number | null>(null);
 
   useEffect(() => {
-    const fetchUser = async () => {
+    const initialize = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       setUserId(user?.id || null);
+      if (user) {
+        const { data: likes, error: likesError } = await supabase.from('likes').select('post_id').eq('user_id', user.id);
+        if (likes) setUserLikes(new Set(likes.map(l => l.post_id)));
+        
+        const { data: dislikes, error: dislikesError } = await supabase.from('dislikes').select('post_id').eq('user_id', user.id);
+        if (dislikes) setUserDislikes(new Set(dislikes.map(d => d.post_id)));
+      }
     };
-    fetchUser();
+    initialize();
 
-    // Listen for auth state changes
     const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUserId(session?.user?.id || null);
+      const newUserId = session?.user?.id || null;
+      setUserId(newUserId);
+      if (!newUserId) {
+          setUserLikes(new Set());
+          setUserDislikes(new Set());
+      } else {
+          initialize(); // Re-initialize on user change
+      }
     });
 
-    return () => {
-      authListener?.subscription.unsubscribe();
-    };
+    return () => authListener?.subscription.unsubscribe();
   }, []);
 
-  // Likes functions
-  const userHasLiked = (postId: number) => userLikes.has(postId);
-  const getLikesCount = (postId: number) => likesCount.get(postId) || 0;
+  const isLiking = (postId: number) => loadingPostId === postId;
+  const isDisliking = (postId: number) => loadingPostId === postId;
 
-  const toggleLike = async (postId: number) => {
-    if (!userId) {
-      console.warn('User not authenticated. Cannot toggle like.');
-      return;
+  const toggleLike = useCallback(async (postId: number) => {
+    if (!userId) return;
+
+    setLoadingPostId(postId);
+    const post = posts.find(p => p.id === postId);
+    if (!post) {
+        setLoadingPostId(null);
+        return;
     }
-    setLikesLoading(true);
+    
+    const isLiked = userLikes.has(postId);
+    const isDisliked = userDislikes.has(postId);
+    let optimisticLikes = post.likes_count;
+    let optimisticDislikes = post.dislikes_count;
 
-    try {
-      const currentlyLiked = userLikes.has(postId);
-      const currentlyDisliked = userDislikes.has(postId);
+    if (isLiked) {
+      // Unlike
+      optimisticLikes--;
+      setUserLikes(prev => { const next = new Set(prev); next.delete(postId); return next; });
+      updatePostLikes(postId, optimisticLikes);
+      await supabase.from('likes').delete().match({ user_id: userId, post_id: postId });
+    } else {
+      // Like
+      optimisticLikes++;
+      setUserLikes(prev => new Set(prev).add(postId));
+      updatePostLikes(postId, optimisticLikes);
 
-      if (currentlyLiked) {
-        // Remove like
-        const { error } = await supabase
-          .from('likes')
-          .delete()
-          .eq('user_id', userId)
-          .eq('post_id', postId);
-
-        if (error) throw error;
-
-        setUserLikes((prev) => {
-          const newSet = new Set(prev);
-          newSet.delete(postId);
-          return newSet;
-        });
-        setLikesCount((prev) => {
-          const newMap = new Map(prev);
-          newMap.set(postId, (newMap.get(postId) || 1) - 1);
-          return newMap;
-        });
+      if (isDisliked) {
+        optimisticDislikes--;
+        setUserDislikes(prev => { const next = new Set(prev); next.delete(postId); return next; });
+        updatePostDislikes(postId, optimisticDislikes);
+        // Await the two operations in parallel
+        await Promise.all([
+            supabase.from('likes').insert({ user_id: userId, post_id: postId }),
+            supabase.from('dislikes').delete().match({ user_id: userId, post_id: postId })
+        ]);
       } else {
-        // Add like - remove dislike if exists
-        if (currentlyDisliked) {
-          await supabase
-            .from('dislikes')
-            .delete()
-            .eq('user_id', userId)
-            .eq('post_id', postId);
-
-          setUserDislikes((prev) => {
-            const newSet = new Set(prev);
-            newSet.delete(postId);
-            return newSet;
-          });
-          setDislikesCount((prev) => {
-            const newMap = new Map(prev);
-            newMap.set(postId, (newMap.get(postId) || 1) - 1);
-            return newMap;
-          });
-        }
-
-        // Add like
-        const { error } = await supabase
-          .from('likes')
-          .insert({ user_id: userId, post_id: postId });
-
-        if (error) throw error;
-
-        setUserLikes((prev) => {
-          const newSet = new Set(prev);
-          newSet.add(postId);
-          return newSet;
-        });
-        setLikesCount((prev) => {
-          const newMap = new Map(prev);
-          newMap.set(postId, (newMap.get(postId) || 0) + 1);
-          return newMap;
-        });
+        await supabase.from('likes').insert({ user_id: userId, post_id: postId });
       }
-    } catch (error: any) {
-      console.error('Error toggling like:', error.message);
-    } finally {
-      setLikesLoading(false);
     }
-  };
+    setLoadingPostId(null);
+  }, [userId, userLikes, userDislikes, posts, updatePostLikes, updatePostDislikes]);
 
-  // Dislikes functions
-  const userHasDisliked = (postId: number) => userDislikes.has(postId);
-  const getDislikesCount = (postId: number) => dislikesCount.get(postId) || 0;
 
-  const toggleDislike = async (postId: number) => {
-    if (!userId) {
-      console.warn('User not authenticated. Cannot toggle dislike.');
-      return;
+  const toggleDislike = useCallback(async (postId: number) => {
+    if (!userId) return;
+
+    setLoadingPostId(postId);
+    const post = posts.find(p => p.id === postId);
+    if (!post) {
+        setLoadingPostId(null);
+        return;
     }
-    setDislikesLoading(true);
 
-    try {
-      const currentlyDisliked = userDislikes.has(postId);
-      const currentlyLiked = userLikes.has(postId);
+    const isDisliked = userDislikes.has(postId);
+    const isLiked = userLikes.has(postId);
+    let optimisticDislikes = post.dislikes_count;
+    let optimisticLikes = post.likes_count;
 
-      if (currentlyDisliked) {
-        // Remove dislike
-        const { error } = await supabase
-          .from('dislikes')
-          .delete()
-          .eq('user_id', userId)
-          .eq('post_id', postId);
+    if (isDisliked) {
+      // Undislike
+      optimisticDislikes--;
+      setUserDislikes(prev => { const next = new Set(prev); next.delete(postId); return next; });
+      updatePostDislikes(postId, optimisticDislikes);
+      await supabase.from('dislikes').delete().match({ user_id: userId, post_id: postId });
+    } else {
+      // Dislike
+      optimisticDislikes++;
+      setUserDislikes(prev => new Set(prev).add(postId));
+      updatePostDislikes(postId, optimisticDislikes);
 
-        if (error) throw error;
-
-        setUserDislikes((prev) => {
-          const newSet = new Set(prev);
-          newSet.delete(postId);
-          return newSet;
-        });
-        setDislikesCount((prev) => {
-          const newMap = new Map(prev);
-          newMap.set(postId, (newMap.get(postId) || 1) - 1);
-          return newMap;
-        });
+      if (isLiked) {
+        optimisticLikes--;
+        setUserLikes(prev => { const next = new Set(prev); next.delete(postId); return next; });
+        updatePostLikes(postId, optimisticLikes);
+        await Promise.all([
+            supabase.from('dislikes').insert({ user_id: userId, post_id: postId }),
+            supabase.from('likes').delete().match({ user_id: userId, post_id: postId })
+        ]);
       } else {
-        // Add dislike - remove like if exists
-        if (currentlyLiked) {
-          await supabase
-            .from('likes')
-            .delete()
-            .eq('user_id', userId)
-            .eq('post_id', postId);
-
-          setUserLikes((prev) => {
-            const newSet = new Set(prev);
-            newSet.delete(postId);
-            return newSet;
-          });
-          setLikesCount((prev) => {
-            const newMap = new Map(prev);
-            newMap.set(postId, (newMap.get(postId) || 1) - 1);
-            return newMap;
-          });
-        }
-
-        // Add dislike
-        const { error } = await supabase
-          .from('dislikes')
-          .insert({ user_id: userId, post_id: postId });
-
-        if (error) throw error;
-
-        setUserDislikes((prev) => {
-          const newSet = new Set(prev);
-          newSet.add(postId);
-          return newSet;
-        });
-        setDislikesCount((prev) => {
-          const newMap = new Map(prev);
-          newMap.set(postId, (newMap.get(postId) || 0) + 1);
-          return newMap;
-        });
+        await supabase.from('dislikes').insert({ user_id: userId, post_id: postId });
       }
-    } catch (error: any) {
-      console.error('Error toggling dislike:', error.message);
-    } finally {
-      setDislikesLoading(false);
     }
-  };
-
-  const loading = likesLoading || dislikesLoading;
+    setLoadingPostId(null);
+  }, [userId, userDislikes, userLikes, posts, updatePostDislikes, updatePostLikes]);
 
   return (
     <ReactionsContext.Provider value={{ 
-      userHasLiked, 
+      userLikes,
+      userDislikes,
+      isLiking: (postId) => userLikes.has(postId),
+      isDisliking: (postId) => userDislikes.has(postId),
       toggleLike, 
-      getLikesCount,
-      userHasDisliked,
       toggleDislike,
-      getDislikesCount,
-      loading,
-      likesLoading,
-      dislikesLoading
+      loadingPostId,
     }}>
       {children}
     </ReactionsContext.Provider>
