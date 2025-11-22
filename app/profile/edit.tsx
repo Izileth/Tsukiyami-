@@ -1,67 +1,58 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView, ActivityIndicator, Alert, SafeAreaView } from 'react-native';
-import { useProfile } from '@/context/ProfileContext';
+import { ScrollView, ActivityIndicator, Alert, SafeAreaView, View } from 'react-native';
+import { useProfile, Profile } from '@/context/ProfileContext';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '@/utils/supabase';
+import { ActionButtons } from '@/components/profile/edit/ActionButtons';
+import { EditForm } from '@/components/profile/edit/EditForm';
 
-const FormField = ({ 
-  label, 
-  icon,
-  children 
-}: { 
-  label: string;
-  icon: keyof typeof Ionicons.glyphMap;
-  children: React.ReactNode;
-}) => (
-  <View className="mb-5">
-    <View className="flex-row items-center mb-3">
-      <View className="bg-gray-100 p-2 rounded-lg mr-3">
-        <Ionicons name={icon} size={16} color="#000000" />
-      </View>
-      <Text className="text-black text-sm font-semibold uppercase tracking-wide">{label}</Text>
-    </View>
-    {children}
-  </View>
-);
+const initialFormData = {
+  first_name: '',
+  last_name: '',
+  name: '',
+  slug: '',
+  email: '',
+  bio: '',
+  position: '',
+  location: '',
+  website: '',
+  birth_date: '',
+  social_media_links: {
+    twitter: '',
+    github: '',
+    linkedin: '',
+  },
+};
 
 export default function EditProfileScreen() {
   const { profile, updateProfile, loading: profileLoading } = useProfile();
   const router = useRouter();
 
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [name, setName] = useState('');
-  const [slug, setSlug] = useState('');
-  const [email, setEmail] = useState('');
-  const [bio, setBio] = useState('');
-  const [position, setPosition] = useState('');
-  const [location, setLocation] = useState('');
-  const [website, setWebsite] = useState('');
-  const [birthDate, setBirthDate] = useState('');
-  const [twitter, setTwitter] = useState('');
-  const [github, setGithub] = useState('');
-  const [linkedin, setLinkedin] = useState('');
+  const [formData, setFormData] = useState(initialFormData);
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [updating, setUpdating] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
 
   useEffect(() => {
     if (profile) {
-      setFirstName(profile.first_name || '');
-      setLastName(profile.last_name || '');
-      setName(profile.name || '');
-      setSlug(profile.slug || '');
-      setEmail(profile.email || '');
-      setBio(profile.bio || '');
-      setPosition(profile.position || '');
-      setLocation(profile.location || '');
-      setWebsite(profile.website || '');
-      setBirthDate(profile.birth_date || '');
-      setTwitter(profile.social_media_links?.twitter || '');
-      setGithub(profile.social_media_links?.github || '');
-      setLinkedin(profile.social_media_links?.linkedin || '');
+      setFormData({
+        first_name: profile.first_name || '',
+        last_name: profile.last_name || '',
+        name: profile.name || '',
+        slug: profile.slug || '',
+        email: profile.email || '',
+        bio: profile.bio || '',
+        position: profile.position || '',
+        location: profile.location || '',
+        website: profile.website || '',
+        birth_date: profile.birth_date || '',
+        social_media_links: {
+          twitter: profile.social_media_links?.twitter || '',
+          github: profile.social_media_links?.github || '',
+          linkedin: profile.social_media_links?.linkedin || '',
+        },
+      });
     }
   }, [profile]);
 
@@ -71,25 +62,13 @@ export default function EditProfileScreen() {
       return;
     }
 
-    setUpdating(true);
+    setIsUpdating(true);
     try {
-      await updateProfile({
-        first_name: firstName,
-        last_name: lastName,
-        name,
-        slug,
-        email,
-        bio,
-        position,
-        location,
-        website,
-        birth_date: birthDate || null,
-        social_media_links: {
-          twitter,
-          github,
-          linkedin,
-        },
-      });
+      const profileUpdates: Partial<Profile> = {
+        ...formData,
+        birth_date: formData.birth_date || null,
+      };
+      await updateProfile(profileUpdates);
 
       if (newPassword) {
         const { error: passwordError } = await supabase.auth.updateUser({
@@ -107,7 +86,7 @@ export default function EditProfileScreen() {
     } catch (error: any) {
       Alert.alert('Error', `Failed to update profile: ${error.message}`);
     } finally {
-      setUpdating(false);
+      setIsUpdating(false);
     }
   };
 
@@ -127,232 +106,20 @@ export default function EditProfileScreen() {
         className="flex-1 px-6 pt-6" 
         showsVerticalScrollIndicator={false}
       >
-        {/* Personal Information Section */}
-        <View className="mb-6">
-          <Text className="text-black text-lg font-bold mb-4 uppercase tracking-wide">Personal Information</Text>
-          
-          <FormField label="First Name" icon="person-outline">
-            <TextInput
-              className="w-full px-4 py-3.5 bg-white border border-gray-300 rounded-xl text-black"
-              placeholder="Enter your first name"
-              placeholderTextColor="#9CA3AF"
-              value={firstName}
-              onChangeText={setFirstName}
-            />
-          </FormField>
+        <EditForm 
+          formData={formData}
+          setFormData={setFormData}
+          newPassword={newPassword}
+          setNewPassword={setNewPassword}
+          confirmPassword={confirmPassword}
+          setConfirmPassword={setConfirmPassword}
+        />
 
-          <FormField label="Last Name" icon="person-outline">
-            <TextInput
-              className="w-full px-4 py-3.5 bg-white border border-gray-300 rounded-xl text-black"
-              placeholder="Enter your last name"
-              placeholderTextColor="#9CA3AF"
-              value={lastName}
-              onChangeText={setLastName}
-            />
-          </FormField>
-
-          <FormField label="Full Name" icon="person-outline">
-            <TextInput
-              className="w-full px-4 py-3.5 bg-white border border-gray-300 rounded-xl text-black"
-              placeholder="Enter your full name"
-              placeholderTextColor="#9CA3AF"
-              value={name}
-              onChangeText={setName}
-            />
-          </FormField>
-
-          <FormField label="Birth Date" icon="calendar-outline">
-            <TextInput
-              className="w-full px-4 py-3.5 bg-white border border-gray-300 rounded-xl text-black"
-              placeholder="YYYY-MM-DD"
-              placeholderTextColor="#9CA3AF"
-              value={birthDate}
-              onChangeText={setBirthDate}
-            />
-            <Text className="text-gray-500 text-xs mt-2">Format: YYYY-MM-DD (e.g., 1990-01-15)</Text>
-          </FormField>
-        </View>
-
-        {/* Account Information Section */}
-        <View className="mb-6">
-          <Text className="text-black text-lg font-bold mb-4 uppercase tracking-wide">Account Information</Text>
-          
-          <FormField label="Username (Slug)" icon="at-outline">
-            <TextInput
-              className="w-full px-4 py-3.5 bg-white border border-gray-300 rounded-xl text-black"
-              placeholder="your-unique-username"
-              placeholderTextColor="#9CA3AF"
-              value={slug}
-              onChangeText={setSlug}
-              autoCapitalize="none"
-            />
-            <Text className="text-gray-500 text-xs mt-2">This will be your profile URL: @{slug || 'username'}</Text>
-          </FormField>
-
-          <FormField label="Email" icon="mail-outline">
-            <TextInput
-              className="w-full px-4 py-3.5 bg-white border border-gray-300 rounded-xl text-black"
-              placeholder="your@email.com"
-              placeholderTextColor="#9CA3AF"
-              value={email}
-              onChangeText={setEmail}
-              autoCapitalize="none"
-              keyboardType="email-address"
-            />
-          </FormField>
-        </View>
-
-        {/* Professional Information Section */}
-        <View className="mb-6">
-          <Text className="text-black text-lg font-bold mb-4 uppercase tracking-wide">Professional Information</Text>
-          
-          <FormField label="Position" icon="briefcase-outline">
-            <TextInput
-              className="w-full px-4 py-3.5 bg-white border border-gray-300 rounded-xl text-black"
-              placeholder="e.g., Senior Developer"
-              placeholderTextColor="#9CA3AF"
-              value={position}
-              onChangeText={setPosition}
-            />
-          </FormField>
-
-          <FormField label="Bio" icon="document-text-outline">
-            <TextInput
-              className="w-full px-4 py-3.5 bg-white border border-gray-300 rounded-xl text-black min-h-[100px]"
-              placeholder="Tell us about yourself..."
-              placeholderTextColor="#9CA3AF"
-              value={bio}
-              onChangeText={setBio}
-              multiline
-              textAlignVertical="top"
-            />
-            <Text className="text-gray-500 text-xs mt-2">{bio.length}/500 characters</Text>
-          </FormField>
-        </View>
-
-        {/* Location & Contact Section */}
-        <View className="mb-6">
-          <Text className="text-black text-lg font-bold mb-4 uppercase tracking-wide">Location & Contact</Text>
-          
-          <FormField label="Location" icon="location-outline">
-            <TextInput
-              className="w-full px-4 py-3.5 bg-white border border-gray-300 rounded-xl text-black"
-              placeholder="City, Country"
-              placeholderTextColor="#9CA3AF"
-              value={location}
-              onChangeText={setLocation}
-            />
-          </FormField>
-
-          <FormField label="Website" icon="globe-outline">
-            <TextInput
-              className="w-full px-4 py-3.5 bg-white border border-gray-300 rounded-xl text-black"
-              placeholder="https://your-website.com"
-              placeholderTextColor="#9CA3AF"
-              value={website}
-              onChangeText={setWebsite}
-              autoCapitalize="none"
-              keyboardType="url"
-            />
-          </FormField>
-        </View>
-
-        {/* Social Links Section */}
-        <View className="mb-6">
-          <Text className="text-black text-lg font-bold mb-4 uppercase tracking-wide">Social Links</Text>
-
-          <FormField label="Twitter" icon="logo-twitter">
-            <TextInput
-              className="w-full px-4 py-3.5 bg-white border border-gray-300 rounded-xl text-black"
-              placeholder="https://twitter.com/username"
-              placeholderTextColor="#9CA3AF"
-              value={twitter}
-              onChangeText={setTwitter}
-              autoCapitalize="none"
-              keyboardType="url"
-            />
-          </FormField>
-
-          <FormField label="GitHub" icon="logo-github">
-            <TextInput
-              className="w-full px-4 py-3.5 bg-white border border-gray-300 rounded-xl text-black"
-              placeholder="https://github.com/username"
-              placeholderTextColor="#9CA3AF"
-              value={github}
-              onChangeText={setGithub}
-              autoCapitalize="none"
-              keyboardType="url"
-            />
-          </FormField>
-
-          <FormField label="LinkedIn" icon="logo-linkedin">
-            <TextInput
-              className="w-full px-4 py-3.5 bg-white border border-gray-300 rounded-xl text-black"
-              placeholder="https://linkedin.com/in/username"
-              placeholderTextColor="#9CA3AF"
-              value={linkedin}
-              onChangeText={setLinkedin}
-              autoCapitalize="none"
-              keyboardType="url"
-            />
-          </FormField>
-        </View>
-
-        {/* Security Section */}
-        <View className="mb-6">
-          <Text className="text-black text-lg font-bold mb-4 uppercase tracking-wide">Security</Text>
-
-          <FormField label="New Password" icon="lock-closed-outline">
-            <TextInput
-              className="w-full px-4 py-3.5 bg-white border border-gray-300 rounded-xl text-black"
-              placeholder="Enter new password"
-              placeholderTextColor="#9CA3AF"
-              value={newPassword}
-              onChangeText={setNewPassword}
-              secureTextEntry
-            />
-          </FormField>
-
-          <FormField label="Confirm Password" icon="lock-closed-outline">
-            <TextInput
-              className="w-full px-4 py-3.5 bg-white border border-gray-300 rounded-xl text-black"
-              placeholder="Confirm new password"
-              placeholderTextColor="#9CA3AF"
-              value={confirmPassword}
-              onChangeText={setConfirmPassword}
-              secureTextEntry
-            />
-          </FormField>
-        </View>
-
-        {/* Action Buttons */}
-        <View className="mb-8 gap-3">
-          <TouchableOpacity
-            className={`w-full py-4 rounded-xl ${updating ? 'bg-gray-400' : 'bg-black'}`}
-            onPress={handleUpdate}
-            disabled={updating}
-          >
-            {updating ? (
-              <View className="flex-row items-center justify-center">
-                <ActivityIndicator color="white" size="small" />
-                <Text className="text-white font-bold ml-2">Saving Changes...</Text>
-              </View>
-            ) : (
-              <View className="flex-row items-center justify-center">
-                <Ionicons name="checkmark-circle-outline" size={20} color="white" />
-                <Text className="text-white font-bold ml-2">Save Changes</Text>
-              </View>
-            )}
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            className="w-full py-4 rounded-xl border-2 border-gray-300"
-            onPress={() => router.back()}
-            disabled={updating}
-          >
-            <Text className="text-black font-semibold text-center">Cancel</Text>
-          </TouchableOpacity>
-        </View>
+        <ActionButtons 
+          isUpdating={isUpdating}
+          onSave={handleUpdate}
+          onCancel={() => router.back()}
+        />
       </ScrollView>
     </SafeAreaView>
   );

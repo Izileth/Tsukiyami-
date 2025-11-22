@@ -82,12 +82,37 @@ export default function HomeScreen() {
                     )}
 
                     {/* Content Container */}
-                    <View className="px-1">
-                      {/* Title */}
-                      <Text
-                        className="text-2xl font-bold text-black mb-3 leading-tight tracking-tight"
-                        numberOfLines={2}
-                      >
+                  <View className="px-1">
+                    {/* Author Info */}
+                    {post.profiles && (
+                      <Link href={{
+                        pathname: '/profile/[slug]',
+                        params: { slug: post?.profiles?.slug  || ''}
+                      }} asChild>
+                        <TouchableOpacity className="flex-row items-center mb-4">
+                          <Image
+                            source={{ uri: post.profiles.avatar_url || 'https://via.placeholder.com/40' }} // Placeholder for no avatar
+                            className="w-10 h-10 rounded-full mr-3"
+                          />
+                          <View>
+                            <Text className="text-sm font-semibold text-black">
+                              {post.profiles.name || post.profiles.first_name || 'Usuário Anônimo'}
+                            </Text>
+                            {post.profiles.slug && (
+                              <Text className="text-xs text-black/60">
+                                @{post.profiles.slug}
+                              </Text>
+                            )}
+                          </View>
+                        </TouchableOpacity>
+                      </Link>
+                    )}
+
+                    {/* Title */}
+                    <Text
+                      className="text-2xl font-bold text-black mb-3 leading-tight tracking-tight"
+                      numberOfLines={2}
+                    >
                         {post.title}
                       </Text>
 
