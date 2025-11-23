@@ -6,17 +6,19 @@ import { StatCard } from './StatCard';
 interface StatsSectionProps {
   posts: Post[];
   userId?: string;
+  followerCount: number;
+  followingCount: number;
 }
 
-export function StatsSection({ posts, userId }: StatsSectionProps) {
-  const userPostsCount = posts.filter((p) => p.user_id === userId).length.toString();
+export function StatsSection({ posts, userId, followerCount, followingCount }: StatsSectionProps) {
+  const userPostsCount = posts.filter((p) => p.user_id === userId).length;
 
   return (
     <View className="mb-6 px-6">
       <View className="flex-row gap-3">
-        <StatCard number={userPostsCount} label="Posts" />
-        <StatCard number="0" label="Followers" />
-        <StatCard number="0" label="Following" />
+        <StatCard number={userPostsCount.toString()} label="Posts" />
+        <StatCard number={followerCount.toString()} label="Followers" />
+        <StatCard number={followingCount.toString()} label="Following" />
       </View>
     </View>
   );

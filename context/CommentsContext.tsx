@@ -71,8 +71,7 @@ export const CommentsProvider = ({ children }: { children: React.ReactNode }) =>
     const { data, error } = await supabase
       .from('comments')
       .insert({ post_id: postId, user_id: session.user.id, content, parent_comment_id: parentCommentId })
-      .select(`*, profiles(id, avatar_url, name, slug)`)
-      .single();
+      .select(`*, profiles(id, avatar_url, name, slug)`);
 
     setLoading(false);
     if (error) {
@@ -80,37 +79,59 @@ export const CommentsProvider = ({ children }: { children: React.ReactNode }) =>
       return { data: null, error };
     }
 
-    if (data) {
-      setComments((prev) => [...prev, data]);
+    if (data && data.length > 0) {
+      const newComment = data[0];
+      setComments((prev) => [...prev, newComment]);
       // Update count in PostsContext
       const post = posts.find(p => p.id === postId);
       if (post) {
         updatePostCommentsCount(postId, post.comments_count + 1);
       }
+      return { data: newComment, error: null };
     }
-    return { data, error: null };
+    return { data: null, error: { message: "Failed to retrieve new comment.", code: "404", details: "", hint: ""} as PostgrestError };
   };
 
 
   const updateComment = async (commentId: number, newContent: string) => {
-    // ... (no changes needed here)
-    const { data, error } = await supabase.from('comments')
-      .update({ content: newContent })
+    setLoading(true);
+    console.log(`[updateComment] Attempting to update comment ${commentId}`);
+
+    // Step 1: Perform the update.
+    const { error: updateError } = await supabase
+      .from('comments')
+      .update({ content: newContent, updated_at: new Date().toISOString() })
+      .eq('id', commentId);
+
+    if (updateError) {
+      console.error('[updateComment] Error during UPDATE step:', updateError);
+      setLoading(false);
+      return { data: null, error: updateError };
+    }
+
+    console.log('[updateComment] UPDATE step successful. Fetching updated comment...');
+
+    // Step 2: Fetch the updated data.
+    const { data: selectData, error: selectError } = await supabase
+      .from('comments')
+      .select(`*, profiles(id, avatar_url, name, slug)`)
       .eq('id', commentId)
-      .select();
+      .single();
 
-    if (error) {
-      console.error('Error updating comment:', error);
-      return { data: null, error };
+    setLoading(false);
+    if (selectError) {
+      console.error('[updateComment] Error during SELECT step:', selectError);
+      return { data: null, error: selectError };
     }
-
-    // Update count in PostsContext
-    const post = posts.find(p => p.id === data?.post_id);
-    if (post) {
-      updatePostCommentsCount(data?.post_id, post.comments_count - 1);
-    }
-
-    return { data, error: null };
+    
+    console.log('[updateComment] Received updated comment:', selectData);
+    setComments((prev) => {
+      console.log('[updateComment] Updating local state...');
+      const newComments = prev.map(comment => comment.id === commentId ? selectData : comment);
+      console.log('[updateComment] New local state:', newComments);
+      return newComments;
+    });
+    return { data: selectData, error: null };
   };
   const deleteComment = async (commentId: number) => {
     setLoading(true);

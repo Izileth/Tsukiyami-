@@ -34,7 +34,7 @@ export default function PostScreen() {
   // Contextos
   const { profile } = useProfile();
   const { getPostBySlug, incrementView } = usePosts();
-  const { comments, loading: commentsLoading, fetchComments, addComment } = useComments();
+  const { comments, loading: commentsLoading, fetchComments, addComment, updateComment, deleteComment } = useComments();
   const {
     userLikes,
     userDislikes,
@@ -149,6 +149,8 @@ export default function PostScreen() {
           profile={profile}
           commentsLoading={commentsLoading}
           onAddComment={handleAddComment}
+          onUpdateComment={updateComment}
+          onDeleteComment={deleteComment}
         />
       </ScrollView>
     </SafeAreaView>

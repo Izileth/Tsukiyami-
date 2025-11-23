@@ -105,7 +105,8 @@ export default function PostFormScreen() {
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsMultipleSelection: true,
       quality: 0.8,
-      selectionLimit: 10, 
+      selectionLimit: 10,
+      base64: true,
     });
 
     if (!result.canceled) {

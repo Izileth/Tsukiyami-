@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { supabase } from '@/utils/supabase';
 import { PostgrestError } from '@supabase/supabase-js';
-import { Profile } from './ProfileContext';
+import { Profile, useProfile } from './ProfileContext';
 export interface Category {
   id: number;
   name: string;
@@ -62,6 +62,7 @@ export const usePosts = () => {
 };
 
 export const PostsProvider = ({ children }: { children: React.ReactNode }) => {
+  const { profile } = useProfile();
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewedPosts, setViewedPosts] = useState<Set<number>>(new Set());
@@ -73,6 +74,7 @@ export const PostsProvider = ({ children }: { children: React.ReactNode }) => {
         .from('posts')
         .select(`
           *,
+          profile:profiles!posts_user_id_fkey(*),
           post_images (id, image_url),
           post_categories (categories (id, name)),
           post_tags (tags (id, name))
@@ -135,11 +137,15 @@ export const PostsProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   const createPost = useCallback(async (
-    postData: Omit<Post, 'id' | 'created_at' | 'updated_at' | 'post_images' | 'categories' | 'tags'>,
+    postData: Omit<Post, 'id' | 'created_at' | 'updated_at' | 'post_images' | 'categories' | 'tags' | 'profile'>,
     image_urls: string[],
     category_ids: number[],
     tag_ids: number[]
   ) => {
+    if (!profile) {
+      return { data: null, error: { message: "Profile not loaded yet", code: "PROF-404", details: "User profile is not available to create a post.", hint: "Wait for the profile to be loaded." } as PostgrestError };
+    }
+
     const { data, error } = await supabase.from('posts').insert(postData).select();
     if (error) return { data: null, error };
     if (!data) return { data: null, error: { message: "No data returned after post creation", code: "PGRST100", details: "No data", hint: "No hint" } as PostgrestError };
@@ -176,6 +182,7 @@ export const PostsProvider = ({ children }: { children: React.ReactNode }) => {
       post_images: postImages,
       categories,
       tags,
+      profile: profile,
       likes_count: 0,
       dislikes_count: 0,
       views_count: 0,
@@ -183,7 +190,7 @@ export const PostsProvider = ({ children }: { children: React.ReactNode }) => {
     };
     setPosts((prevPosts) => [fullNewPost, ...prevPosts]);
     return { data, error: null };
-  }, []);
+  }, [profile]);
 
   const updatePost = useCallback(async (
     id: number,
@@ -230,6 +237,7 @@ export const PostsProvider = ({ children }: { children: React.ReactNode }) => {
 
     const fullUpdatedPost: Post = {
       ...updatedPostData,
+      profile: posts.find(p => p.id === id)?.profile,
       post_images: postImages,
       categories,
       tags,

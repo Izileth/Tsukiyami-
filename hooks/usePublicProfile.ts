@@ -7,6 +7,7 @@ export function usePublicProfile(slug: string) {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
+  const [followLoading, setFollowLoading] = useState(false);
   const [isFollowing, setIsFollowing] = useState(false);
   const [followerCount, setFollowerCount] = useState(0);
   const [followingCount, setFollowingCount] = useState(0);
@@ -59,7 +60,7 @@ export function usePublicProfile(slug: string) {
         const { data: userData } = await supabase.auth.getSession();
         if (userData?.session?.user) {
           const { data: followData, error: followError } = await supabase
-            .from('follows')
+            .from('followers')
             .select('*')
             .eq('follower_id', userData.session.user.id)
             .eq('following_id', profileData.id);
@@ -73,7 +74,7 @@ export function usePublicProfile(slug: string) {
         
         // Fetch follower count
         const { count: followers, error: followersError } = await supabase
-          .from('follows')
+          .from('followers')
           .select('*', { count: 'exact' })
           .eq('following_id', profileData.id);
         
@@ -83,7 +84,7 @@ export function usePublicProfile(slug: string) {
 
         // Fetch following count
         const { count: following, error: followingError } = await supabase
-          .from('follows')
+          .from('followers')
           .select('*', { count: 'exact' })
           .eq('follower_id', profileData.id);
         
@@ -104,7 +105,7 @@ export function usePublicProfile(slug: string) {
 
   const handleFollowToggle = async () => {
     if (!profile) return;
-    setLoading(true);
+    setFollowLoading(true);
 
     try {
       const { data: userData } = await supabase.auth.getSession();
@@ -112,19 +113,19 @@ export function usePublicProfile(slug: string) {
 
       if (!currentUserId) {
         Alert.alert('Authentication Required', 'You must be logged in to follow users.');
-        setLoading(false);
+        setFollowLoading(false);
         return;
       }
 
       if (currentUserId === profile.id) {
         Alert.alert('Action Not Allowed', 'You cannot follow yourself.');
-        setLoading(false);
+        setFollowLoading(false);
         return;
       }
 
       if (isFollowing) {
         const { error } = await supabase
-          .from('follows')
+          .from('followers')
           .delete()
           .eq('follower_id', currentUserId)
           .eq('following_id', profile.id);
@@ -137,7 +138,7 @@ export function usePublicProfile(slug: string) {
         Alert.alert('Success', `You unfollowed ${profile.name || profile.slug}`);
       } else {
         const { error } = await supabase
-          .from('follows')
+          .from('followers')
           .insert({ follower_id: currentUserId, following_id: profile.id });
 
         if (error) {
@@ -151,9 +152,9 @@ export function usePublicProfile(slug: string) {
       console.error('Follow/Unfollow error:', error);
       Alert.alert('Error', `Failed to update follow status: ${error.message}`);
     } finally {
-      setLoading(false);
+      setFollowLoading(false);
     }
   };
 
-  return { profile, posts, loading, isFollowing, followerCount, followingCount, handleFollowToggle };
+  return { profile, posts, loading, isFollowing, followerCount, followingCount, handleFollowToggle, followLoading };
 }

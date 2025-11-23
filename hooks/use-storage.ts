@@ -79,18 +79,23 @@ export const useStorage = () => {
     bucket: 'posts',
     files: ImagePicker.ImagePickerAsset[]
   ): Promise<string[]> => {
+    console.log(`[uploadMultipleImages] Starting upload for ${files.length} file(s).`);
     setUploading(true);
     const urls: string[] = [];
     try {
       for (const image of files) {
+        console.log(`[uploadMultipleImages] Processing file: ${image.uri}`);
         const base64 = image.base64;
         if (!base64) {
-          console.warn('Could not read image data for one of the images.');
+          console.warn(`[uploadMultipleImages] SKIPPING: No base64 data for ${image.uri}`);
           continue;
         }
+        console.log(`[uploadMultipleImages] Base64 data found for ${image.uri}.`);
+        
         const fileExt = image.uri.split('.').pop()?.toLowerCase() || 'jpeg';
         const filePath = `${Date.now()}_${Math.random()}.${fileExt}`;
-        
+        console.log(`[uploadMultipleImages] Uploading to path: ${filePath}`);
+
         const { data, error } = await supabase.storage
           .from(bucket)
           .upload(filePath, decode(base64), {
@@ -98,18 +103,24 @@ export const useStorage = () => {
           });
   
         if (error) {
+          console.error('[uploadMultipleImages] Upload error from Supabase:', error);
           throw error;
         }
   
+        console.log('[uploadMultipleImages] Upload successful, getting public URL for path:', data.path);
         const { data: { publicUrl } } = supabase.storage
           .from(bucket)
           .getPublicUrl(data.path);
+        
+        console.log(`[uploadMultipleImages] Got public URL: ${publicUrl}`);
         urls.push(publicUrl);
       }
     } catch (error: any) {
+      console.error('[uploadMultipleImages] Caught an error in the process:', error);
       Alert.alert('Upload Error', error.message);
     } finally {
       setUploading(false);
+      console.log(`[uploadMultipleImages] Finished. Returning ${urls.length} URLs.`);
     }
     return urls;
   };

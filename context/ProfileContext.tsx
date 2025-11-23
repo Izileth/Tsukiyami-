@@ -26,6 +26,8 @@ export type Profile = {
 type ProfileContextType = {
   profile: Profile | null;
   loading: boolean;
+  followerCount: number;
+  followingCount: number;
   updateProfile: (updatedProfile: Partial<Profile>) => Promise<void>;
 };
 
@@ -35,23 +37,32 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const { session } = useAuth();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [followerCount, setFollowerCount] = useState(0);
+  const [followingCount, setFollowingCount] = useState(0);
 
   useEffect(() => {
     const fetchProfile = async () => {
       if (session?.user) {
         setLoading(true);
         try {
-          const { data, error } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', session.user.id)
-            .single();
+          // Fetch profile, followers, and following in parallel
+          const [profileRes, followersRes, followingRes] = await Promise.all([
+            supabase.from('profiles').select('*').eq('id', session.user.id).single(),
+            supabase.from('followers').select('*', { count: 'exact' }).eq('following_id', session.user.id),
+            supabase.from('followers').select('*', { count: 'exact' }).eq('follower_id', session.user.id)
+          ]);
 
-          if (error && error.code !== 'PGRST116') { // PGRST116: "exact one row expected, but 0 rows returned"
-            console.error('Error fetching profile:', error);
+          if (profileRes.error && profileRes.error.code !== 'PGRST116') {
+            console.error('Error fetching profile:', profileRes.error);
           } else {
-            setProfile(data);
+            setProfile(profileRes.data);
           }
+
+          setFollowerCount(followersRes.count ?? 0);
+          setFollowingCount(followingRes.count ?? 0);
+
+        } catch(error) {
+            console.error('Failed to fetch profile data:', error)
         } finally {
           setLoading(false);
         }
@@ -60,15 +71,18 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
     fetchProfile();
 
-    const subscription = supabase
+    const profileSubscription = supabase
       .channel('public:profiles')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles', filter: `id=eq.${session?.user?.id}` }, (payload) => {
         setProfile(payload.new as Profile);
       })
       .subscribe();
+      
+    // Note: This won't update counts in real-time without more specific subscriptions
+    // which can be complex. A pull-to-refresh or re-fetch on focus would be a good addition.
 
     return () => {
-      supabase.removeChannel(subscription);
+      supabase.removeChannel(profileSubscription);
     };
   }, [session]);
 
@@ -93,7 +107,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   return (
-    <ProfileContext.Provider value={{ profile, loading, updateProfile }}>
+    <ProfileContext.Provider value={{ profile, loading, followerCount, followingCount, updateProfile }}>
       {children}
     </ProfileContext.Provider>
   );

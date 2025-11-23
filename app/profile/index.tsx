@@ -17,7 +17,7 @@ function handleLogout() {
 }
 
 export default function ProfileScreen() {
-  const { profile, loading: profileLoading, updateProfile } = useProfile();
+  const { profile, loading: profileLoading, followerCount, followingCount, updateProfile } = useProfile();
   const { uploading, uploadImage } = useStorage();
   const { posts, loading: postsLoading, deletePost } = usePosts();
 
@@ -66,7 +66,12 @@ export default function ProfileScreen() {
           onUpload={handleUpload}
         />
 
-        <StatsSection posts={posts} userId={profile?.id} />
+        <StatsSection
+          posts={posts}
+          userId={profile?.id}
+          followerCount={followerCount}
+          followingCount={followingCount}
+        />
 
         <PostsSection
           posts={posts}

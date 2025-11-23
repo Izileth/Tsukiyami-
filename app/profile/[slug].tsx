@@ -12,7 +12,7 @@ import { ProfileDetails } from '@/components/profile/slug/ProfileDetails';
 
 export default function PublicProfileScreen() {
   const { slug } = useLocalSearchParams<{ slug: string }>();
-  const { profile, posts, loading, isFollowing, followerCount, followingCount, handleFollowToggle } = usePublicProfile(slug);
+  const { profile, posts, loading, isFollowing, followerCount, followingCount, handleFollowToggle, followLoading } = usePublicProfile(slug);
 
   if (loading || !profile) {
     return (
@@ -35,7 +35,7 @@ export default function PublicProfileScreen() {
           profile={profile}
           isFollowing={isFollowing}
           handleFollowToggle={handleFollowToggle}
-          loading={loading}
+          loading={followLoading}
         />
 
         <Stats
