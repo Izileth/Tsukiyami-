@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import React, { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { ScrollView, View, ActivityIndicator, Text } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { usePosts } from '@/context/PostsContext';
@@ -12,14 +12,12 @@ import { PostMeta } from '@/components/post/slug/PostMeta';
 import { PostContent } from '@/components/post/slug/PostContent';
 import { CommentsSection } from '@/components/post/slug/CommentsSection';
 
-// Moved to PostScreen directly as it's simple
 const LoadingIndicator = () => (
   <View className="flex-1 justify-center items-center bg-white">
     <ActivityIndicator size="large" color="#000000" />
   </View>
 );
 
-// Moved to PostScreen directly as it's simple
 const PostNotFound = () => (
   <View className="flex-1 justify-center items-center bg-white p-4">
     <Text className="text-xl font-bold text-black mb-2">Post Not Found</Text>
@@ -30,11 +28,12 @@ const PostNotFound = () => (
 );
 
 export default function PostScreen() {
-  const { slug } = useLocalSearchParams();
+  const params = useLocalSearchParams();
+  const slug = typeof params.slug === 'string' ? params.slug : undefined;
 
   // Contextos
   const { profile } = useProfile();
-  const { getPostBySlug, incrementView } = usePosts(); // incrementView now from usePosts
+  const { getPostBySlug, incrementView } = usePosts();
   const { comments, loading: commentsLoading, fetchComments, addComment } = useComments();
   const {
     userLikes,
@@ -46,64 +45,74 @@ export default function PostScreen() {
 
   // Estados locais
   const [initialLoading, setInitialLoading] = useState(true);
+  
+  // Ref para evitar múltiplas chamadas
+  const hasFetchedRef = useRef(false);
 
-  // Buscar post do contexto
+  // Buscar post do contexto - simplificado
   const post = useMemo(() => {
-    return getPostBySlug(slug as string);
+    if (!slug) return null;
+    return getPostBySlug(slug);
   }, [slug, getPostBySlug]);
 
-  // Fetch data
-  const fetchPostData = useCallback(async () => {
+  // Fetch data - otimizado para rodar apenas UMA vez
+  useEffect(() => {
+    // Se não tem slug ou post, para aqui
     if (!slug || !post) {
       setInitialLoading(false);
       return;
     }
 
-    try {
-      await Promise.all([
-        incrementView(post.id), // Use post.id and new incrementView
-        fetchComments(post.id),
-      ]);
-    } catch (error) {
-      console.error('Error fetching post data:', error);
-    } finally {
-      setInitialLoading(false);
+    // Se já buscou, não busca de novo
+    if (hasFetchedRef.current) {
+      return;
     }
-  }, [slug, post, fetchComments, incrementView]); // Add incrementView to deps
 
+    const fetchPostData = async () => {
+      try {
+        hasFetchedRef.current = true;
+        
+        await Promise.all([
+          incrementView(post.id),
+          fetchComments(post.id),
+        ]);
+      } catch (error) {
+        console.error('Error fetching post data:', error);
+      } finally {
+        setInitialLoading(false);
+      }
+    };
+
+    fetchPostData();
+  }, [slug, post?.id]); // Dependências mínimas: apenas slug e post.id
+
+  // Reset do ref quando o slug muda
   useEffect(() => {
-    if (slug) {
-      fetchPostData();
-    }
-  }, [slug, fetchPostData]);
+    hasFetchedRef.current = false;
+  }, [slug]);
 
-  // Handlers
+  // Handlers - memoizados corretamente
   const handleAddComment = useCallback(async (commentText: string) => {
     if (!profile || !post) return;
     await addComment(post.id, commentText);
-  }, [profile, post, addComment]);
+  }, [profile?.id, post?.id, addComment]); // Use apenas IDs
 
   const handleLike = useCallback(async () => {
     if (!profile || !post) return;
     await toggleLike(post.id);
-  }, [profile, post, toggleLike]);
+  }, [profile?.id, post?.id, toggleLike]); // Use apenas IDs
 
   const handleDislike = useCallback(async () => {
     if (!profile || !post) return;
     await toggleDislike(post.id);
-  }, [profile, post, toggleDislike]);
+  }, [profile?.id, post?.id, toggleDislike]); // Use apenas IDs
 
-  // Dados calculados
-  // Likes/Dislikes counts come directly from post object
-  const currentLikesCount = post?.likes_count || 0;
-  const currentDislikesCount = post?.dislikes_count || 0;
-
-  // Use userLikes/userDislikes Sets from useReactions
-  const hasLiked = post ? userLikes.has(post.id) : false;
-  const hasDisliked = post ? userDislikes.has(post.id) : false;
-
-  // Loading state for reactions
-  const reactionLoading = loadingPostId === post?.id;
+  // Dados calculados - memoizados
+  const currentLikesCount = useMemo(() => post?.likes_count || 0, [post?.likes_count]);
+  const currentDislikesCount = useMemo(() => post?.dislikes_count || 0, [post?.dislikes_count]);
+  const hasLiked = useMemo(() => post ? userLikes.has(post.id) : false, [post?.id, userLikes]);
+  const hasDisliked = useMemo(() => post ? userDislikes.has(post.id) : false, [post?.id, userDislikes]);
+  const reactionLoading = useMemo(() => loadingPostId === post?.id, [loadingPostId, post?.id]);
 
   // Combined loading state
   const isLoading = initialLoading || commentsLoading;
@@ -131,8 +140,8 @@ export default function PostScreen() {
           hasDisliked={hasDisliked}
           onLike={handleLike}
           onDislike={handleDislike}
-          likesLoading={reactionLoading} // Use reactionLoading
-          dislikesLoading={reactionLoading} // Use reactionLoading
+          likesLoading={reactionLoading}
+          dislikesLoading={reactionLoading}
         />
         <PostContent post={post} />
         <CommentsSection

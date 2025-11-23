@@ -6,8 +6,14 @@ import { useReactions } from '@/context/LikesContext';
 
 interface PostMetaProps {
   post: Post;
-  onLike: () => void;
-  onDislike: () => void;
+  onLike: () => Promise<void>;
+  onDislike: () => Promise<void>;
+  likesCount: number;
+  dislikesCount: number;
+  hasLiked: boolean;
+  hasDisliked: boolean;
+  likesLoading: boolean;
+  dislikesLoading: boolean;
 }
 
 export function PostMeta({
