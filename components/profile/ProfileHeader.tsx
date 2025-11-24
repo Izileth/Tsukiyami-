@@ -88,7 +88,7 @@ export function ProfileHeader({
               >
                 <View className="flex-row items-center">
                   <Ionicons name="add" size={18} color="white" />
-                  <Text className="ml-2 font-bold text-white">New Post</Text>
+                  <Text className="ml-2 font-bold text-white">Nova Publicação</Text>
                 </View>
               </TouchableOpacity>
             </Link>
@@ -96,7 +96,7 @@ export function ProfileHeader({
               <TouchableOpacity className="rounded-full bg-black py-3 px-6">
                 <View className="flex-row items-center">
                   <Ionicons name="create-outline" size={18} color="white" />
-                  <Text className="ml-2 font-bold text-white">Edit Profile</Text>
+                  <Text className="ml-2 font-bold text-white">Editar Perfil</Text>
                 </View>
               </TouchableOpacity>
             </Link>
@@ -108,7 +108,7 @@ export function ProfileHeader({
             <Text className="text-3xl font-bold text-black">{displayName}</Text>
             {profile?.role === 'ADM' && (
               <View className="ml-3 rounded-full bg-black px-3 py-1">
-                <Text className="text-xs font-bold uppercase tracking-wide text-white">Admin</Text>
+                <Text className="text-xs font-bold uppercase tracking-wide text-white">Adimin</Text>
               </View>
             )}
           </View>
@@ -123,7 +123,7 @@ export function ProfileHeader({
             </View>
           )}
 
-          <Text className="mt-2 text-sm text-gray-400">Member since {memberSince}</Text>
+          <Text className="mt-2 text-sm text-gray-400">Membro desde {memberSince}</Text>
         </View>
 
         {profile?.bio && (

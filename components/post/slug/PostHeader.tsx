@@ -22,32 +22,37 @@ export function PostHeader({ post }: PostHeaderProps) {
       <View className="px-6">
         {/* Author Info */}
         {post.profile && (
-            <Link href={{
-              pathname: '/profile/[slug]',
-              params: { slug: post?.profile?.slug || '' }
-            }} asChild>
-              <TouchableOpacity className="flex-row items-center mb-4">
-                <Image
-                  source={{ uri: post.profile.avatar_url || 'https://via.placeholder.com/40' }} // Placeholder for no avatar
-                  className="w-10 h-10 rounded-full mr-3"
-                />
-                <View>
-                  <Text className="text-sm font-semibold text-black">
-                    {post.profile.name || post.profile.first_name || 'Usuário Anônimo'}
+          <Link href={{
+            pathname: '/profile/[slug]',
+            params: { slug: post?.profile?.slug || '' }
+          }} asChild>
+            <TouchableOpacity className="flex-row items-center mb-4">
+              <Image
+                source={{ uri: post.profile.avatar_url || 'https://via.placeholder.com/40' }} // Placeholder for no avatar
+                className="w-10 h-10 rounded-full mr-3"
+              />
+              <View>
+                <Text className="text-sm font-semibold text-black">
+                  {post.profile.name || post.profile.first_name || 'Usuário Anônimo'}
+                </Text>
+                {post.profile.slug && (
+                  <Text className="text-xs text-black/60">
+                    @{post.profile.slug}
                   </Text>
-                  {post.profile.slug && (
-                    <Text className="text-xs text-black/60">
-                      @{post.profile.slug}
-                    </Text>
-                  )}
-                </View>
-              </TouchableOpacity>
-            </Link>
-          )}
+                )}
+              </View>
+            </TouchableOpacity>
+          </Link>
+        )}
 
-        <Text className="text-4xl font-bold text-black mb-4 leading-tight tracking-tight">
+        <Text className="text-4xl font-bold text-black mb-2 leading-tight tracking-tight">
           {post.title}
         </Text>
+        <Text className="text-xl font-semibold text-black mb-6 leading-tight tracking-tight">
+          {post.description}
+        </Text>
+
+
       </View>
     </>
   );

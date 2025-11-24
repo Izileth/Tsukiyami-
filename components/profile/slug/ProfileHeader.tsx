@@ -122,7 +122,7 @@ export const ProfileHeader = ({ profile, isFollowing, handleFollowToggle, loadin
           )}
 
           <Text className="text-gray-400 text-sm mt-2">
-            Member since {memberSince}
+            Membro desde {memberSince}
           </Text>
         </View>
 

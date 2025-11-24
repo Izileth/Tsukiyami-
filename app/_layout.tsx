@@ -14,6 +14,9 @@ import { CommentsProvider } from '@/context/CommentsContext';
 import { ReactionsProvider } from '@/context/LikesContext';
 import LoadingScreen from './_loading';
 import GlobalHeader from '@/components/global-header';
+import Toast from 'react-native-toast-message';
+import { toastConfig } from '@/components/ui/toasts';
+import { registerForPushNotificationsAsync } from '@/utils/notifications';
 
 // Keep the native splash screen visible
 SplashScreen.preventAutoHideAsync();
@@ -61,6 +64,7 @@ export default function RootLayout() {
   useEffect(() => {
     async function prepare() {
       try {
+        await registerForPushNotificationsAsync();
         // This is where you would load fonts, assets, etc.
         // We also add a minimum delay to see the splash screen.
         await Promise.all([
@@ -93,6 +97,7 @@ export default function RootLayout() {
                   <>
                     <GlobalHeader />
                     <RootLayoutNav />
+                    <Toast config={toastConfig} />
                   </>
                 )}
             </ReactionsProvider>

@@ -19,12 +19,12 @@ export function ActionButtons({ isUpdating, onSave, onCancel }: ActionButtonsPro
         {isUpdating ? (
           <View className="flex-row items-center justify-center">
             <ActivityIndicator color="white" size="small" />
-            <Text className="text-white font-bold ml-2">Saving Changes...</Text>
+            <Text className="text-white font-bold ml-2">Salvando Mudanças...</Text>
           </View>
         ) : (
           <View className="flex-row items-center justify-center">
             <Ionicons name="checkmark-circle-outline" size={20} color="white" />
-            <Text className="text-white font-bold ml-2">Save Changes</Text>
+            <Text className="text-white font-bold ml-2">Savar Mudanças</Text>
           </View>
         )}
       </TouchableOpacity>
@@ -34,7 +34,7 @@ export function ActionButtons({ isUpdating, onSave, onCancel }: ActionButtonsPro
         onPress={onCancel}
         disabled={isUpdating}
       >
-        <Text className="text-black font-semibold text-center">Cancel</Text>
+        <Text className="text-black font-semibold text-center">Cancelar</Text>
       </TouchableOpacity>
     </View>
   );

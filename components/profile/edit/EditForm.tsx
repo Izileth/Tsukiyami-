@@ -55,11 +55,11 @@ export function EditForm({
 
   return (
     <>
-      <EditFormSection title="Personal Information">
+      <EditFormSection title="Informações pessoais">
         <FormField label="First Name" icon="person-outline">
           <TextInput
             className="w-full px-4 py-3.5 bg-white border border-gray-300 rounded-xl text-black"
-            placeholder="Enter your first name"
+            placeholder="Informe seu primeiro nome"
             placeholderTextColor="#9CA3AF"
             value={formData.first_name}
             onChangeText={handleInputChange('first_name')}
@@ -69,7 +69,7 @@ export function EditForm({
         <FormField label="Last Name" icon="person-outline">
           <TextInput
             className="w-full px-4 py-3.5 bg-white border border-gray-300 rounded-xl text-black"
-            placeholder="Enter your last name"
+            placeholder="Informe seu sobrenome"
             placeholderTextColor="#9CA3AF"
             value={formData.last_name}
             onChangeText={handleInputChange('last_name')}
@@ -79,7 +79,7 @@ export function EditForm({
         <FormField label="Full Name" icon="person-outline">
           <TextInput
             className="w-full px-4 py-3.5 bg-white border border-gray-300 rounded-xl text-black"
-            placeholder="Enter your full name"
+            placeholder="Informe seu nome completo"
             placeholderTextColor="#9CA3AF"
             value={formData.name}
             onChangeText={handleInputChange('name')}
@@ -98,25 +98,25 @@ export function EditForm({
         </FormField>
       </EditFormSection>
 
-      <EditFormSection title="Account Information">
+      <EditFormSection title="Informaçoes do Perfil">
         <FormField label="Username (Slug)" icon="at-outline">
           <TextInput
             className="w-full px-4 py-3.5 bg-white border border-gray-300 rounded-xl text-black"
-            placeholder="your-unique-username"
+            placeholder="Digite um username"
             placeholderTextColor="#9CA3AF"
             value={formData.slug}
             onChangeText={handleInputChange('slug')}
             autoCapitalize="none"
           />
           <Text className="text-gray-500 text-xs mt-2">
-            Will be your profile URL: @{formData.slug || 'username'}
+            Será mostrado no perfil: @{formData.slug || 'username'}
           </Text>
         </FormField>
 
         <FormField label="Email" icon="mail-outline">
           <TextInput
             className="w-full px-4 py-3.5 bg-white border border-gray-300 rounded-xl text-black"
-            placeholder="your@email.com"
+            placeholder="seu@email.com"
             placeholderTextColor="#9CA3AF"
             value={formData.email}
             onChangeText={handleInputChange('email')}
@@ -126,7 +126,7 @@ export function EditForm({
         </FormField>
       </EditFormSection>
 
-      <EditFormSection title="Professional Information">
+      <EditFormSection title="Informações Profissionais">
         <FormField label="Position" icon="briefcase-outline">
           <TextInput
             className="w-full px-4 py-3.5 bg-white border border-gray-300 rounded-xl text-black"
@@ -140,7 +140,7 @@ export function EditForm({
         <FormField label="Bio" icon="document-text-outline">
           <TextInput
             className="w-full px-4 py-3.5 bg-white border border-gray-300 rounded-xl text-black min-h-[100px]"
-            placeholder="Tell us about yourself..."
+            placeholder="Descreva seu trabalho e suas habilidades"
             placeholderTextColor="#9CA3AF"
             value={formData.bio}
             onChangeText={handleInputChange('bio')}
@@ -153,11 +153,11 @@ export function EditForm({
         </FormField>
       </EditFormSection>
 
-      <EditFormSection title="Location & Contact">
+      <EditFormSection title="Localização & Contato">
         <FormField label="Location" icon="location-outline">
           <TextInput
             className="w-full px-4 py-3.5 bg-white border border-gray-300 rounded-xl text-black"
-            placeholder="City, Country"
+            placeholder="e.g., New York, USA"
             placeholderTextColor="#9CA3AF"
             value={formData.location}
             onChangeText={handleInputChange('location')}
@@ -167,7 +167,7 @@ export function EditForm({
         <FormField label="Website" icon="globe-outline">
           <TextInput
             className="w-full px-4 py-3.5 bg-white border border-gray-300 rounded-xl text-black"
-            placeholder="https://your-website.com"
+            placeholder="https://seu-website.com"
             placeholderTextColor="#9CA3AF"
             value={formData.website}
             onChangeText={handleInputChange('website')}
@@ -177,7 +177,7 @@ export function EditForm({
         </FormField>
       </EditFormSection>
 
-      <EditFormSection title="Social Links">
+      <EditFormSection title="Redes Sociais">
         <FormField label="Twitter" icon="logo-twitter">
           <TextInput
             className="w-full px-4 py-3.5 bg-white border border-gray-300 rounded-xl text-black"
@@ -230,11 +230,11 @@ export function EditForm({
         </FormField>
       </EditFormSection>
 
-      <EditFormSection title="Security">
+      <EditFormSection title="Segurança">
         <FormField label="New Password" icon="lock-closed-outline">
           <TextInput
             className="w-full px-4 py-3.5 bg-white border border-gray-300 rounded-xl text-black"
-            placeholder="Enter new password"
+            placeholder="Nova Senha"
             placeholderTextColor="#9CA3AF"
             value={newPassword}
             onChangeText={setNewPassword}
@@ -245,7 +245,7 @@ export function EditForm({
         <FormField label="Confirm Password" icon="lock-closed-outline">
           <TextInput
             className="w-full px-4 py-3.5 bg-white border border-gray-300 rounded-xl text-black"
-            placeholder="Confirm new password"
+            placeholder="Confirmar Senha"
             placeholderTextColor="#9CA3AF"
             value={confirmPassword}
             onChangeText={setConfirmPassword}

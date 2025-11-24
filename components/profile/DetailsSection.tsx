@@ -25,7 +25,7 @@ export function DetailsSection({ profile }: DetailsSectionProps) {
   return (
     <View className="px-6 pb-6">
       <Text className="text-black text-lg font-bold mb-4 uppercase tracking-wide">
-        Profile Details
+        Detalhes do Perfil
       </Text>
 
       {/* FULL NAME CARD */}
@@ -37,7 +37,7 @@ export function DetailsSection({ profile }: DetailsSectionProps) {
             </View>
             <View className="flex-1">
               <Text className="text-gray-500 text-xs mb-1 uppercase tracking-wide">
-                Full Name
+                Nomae Completo
               </Text>
               <Text className="text-black font-semibold text-base">{fullName}</Text>
             </View>
@@ -45,14 +45,14 @@ export function DetailsSection({ profile }: DetailsSectionProps) {
 
           {profile?.first_name && (
             <View className="flex-row justify-between border-t border-gray-200 pt-3">
-              <Text className="text-gray-500 text-xs uppercase tracking-wide">First Name</Text>
+              <Text className="text-gray-500 text-xs uppercase tracking-wide">Primerio Nome</Text>
               <Text className="text-black text-sm font-medium">{profile.first_name}</Text>
             </View>
           )}
 
           {profile?.last_name && (
             <View className="flex-row justify-between border-t border-gray-200 pt-3 mt-2">
-              <Text className="text-gray-500 text-xs uppercase tracking-wide">Last Name</Text>
+              <Text className="text-gray-500 text-xs uppercase tracking-wide">Último Nome</Text>
               <Text className="text-black text-sm font-medium">{profile.last_name}</Text>
             </View>
           )}
@@ -100,7 +100,7 @@ export function DetailsSection({ profile }: DetailsSectionProps) {
 
       {hasSocialLinks && (
         <View className="bg-white rounded-xl p-4 border border-gray-200">
-          <Text className="text-gray-500 text-xs mb-3 uppercase tracking-wide">Social Media</Text>
+          <Text className="text-gray-500 text-xs mb-3 uppercase tracking-wide">Links Sociais</Text>
 
           <View className="flex-row gap-3 flex-wrap">
 

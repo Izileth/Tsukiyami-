@@ -16,9 +16,9 @@ export function StatsSection({ posts, userId, followerCount, followingCount }: S
   return (
     <View className="mb-6 px-6">
       <View className="flex-row gap-3">
-        <StatCard number={userPostsCount.toString()} label="Posts" />
-        <StatCard number={followerCount.toString()} label="Followers" />
-        <StatCard number={followingCount.toString()} label="Following" />
+        <StatCard number={userPostsCount.toString()} label="Publicações" />
+        <StatCard number={followerCount.toString()} label="Seguidores" />
+        <StatCard number={followingCount.toString()} label="Seguindo" />
       </View>
     </View>
   );

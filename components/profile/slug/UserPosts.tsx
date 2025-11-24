@@ -12,12 +12,12 @@ export const UserPosts = ({ posts, displayName, loading }: UserPostsProps) => {
   return (
     <View className="px-6 mb-6">
       <Text className="text-2xl font-bold text-black mb-4 tracking-tight">
-        Posts by {displayName}
+        Postado por {displayName}
       </Text>
 
       {posts.length === 0 && !loading && (
         <Text className="text-black/40 text-center mt-6 text-base">
-          This user has not published anything yet.
+          Esse Usuário não postou nada ainda.
         </Text>
       )}
 

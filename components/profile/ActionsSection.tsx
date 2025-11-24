@@ -9,7 +9,7 @@ interface ActionsSectionProps {
 export function ActionsSection({ onLogout }: ActionsSectionProps) {
   return (
     <View className="px-6 pb-6">
-      <Text className="text-black text-lg font-bold mb-4 uppercase tracking-wide">Actions</Text>
+      <Text className="text-black text-lg font-bold mb-4 uppercase tracking-wide">Ações</Text>
       <TouchableOpacity
         onPress={onLogout}
         className="bg-white border border-gray-300 rounded-lg p-4 flex-row items-center justify-center mb-3"
