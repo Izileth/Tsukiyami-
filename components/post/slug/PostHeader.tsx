@@ -11,10 +11,10 @@ export function PostHeader({ post }: PostHeaderProps) {
   return (
     <>
       {post.post_images && post.post_images.length > 0 && (
-        <View className="w-full aspect-[4/3] bg-gray-100 mb-6">
+        <View className="w-full px-4 rounded-xl aspect-[4/3] bg-gray-100 mb-6">
           <Image
             source={{ uri: post.post_images[0].image_url }}
-            className="w-full h-full"
+            className="w-full h-full rounded-xl"
             resizeMode="cover"
           />
         </View>

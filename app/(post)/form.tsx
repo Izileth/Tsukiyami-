@@ -163,19 +163,17 @@ export default function PostFormScreen() {
       const finalCategoryIds = getFinalIds(selectedCategories, newCreatedCategories);
       const finalTagIds = getFinalIds(selectedTags, newCreatedTags);
 
-      const postData: Omit<Post, "categories" | "tags" | "id" | "created_at" | "updated_at" | "post_images"> = {
-        user_id: profile.id,
-        title,
-        content,
-        description,
-        slug,
-        likes_count: post?.likes_count || 0,
-        dislikes_count: post?.dislikes_count || 0,
-        views_count: post?.views_count || 0,
-        comments_count: post?.comments_count || 0,
-        profile: profile,
-      };
-
+              const postData: Omit<Post, "categories" | "tags" | "id" | "created_at" | "updated_at" | "post_images" | "profile"> = {
+                user_id: profile.id,
+                title,
+                content,
+                description,
+                slug,
+                likes_count: post?.likes_count || 0,
+                dislikes_count: post?.dislikes_count || 0,
+                views_count: post?.views_count || 0,
+                comments_count: post?.comments_count || 0,
+              };
       // Rest of the code...
       if (post) {
         const finalImageUrls = [...existingImageUrls, ...newImageUrls];

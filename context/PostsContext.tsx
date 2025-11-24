@@ -102,20 +102,19 @@ export const PostsProvider = ({ children }: { children: React.ReactNode }) => {
       setLoading(false);
     }
   }, []);
-
   const searchPosts = useCallback(async (query: string) => {
     try {
       setLoading(true);
       const { data, error } = await supabase
         .from('posts')
         .select(`
-          *,
-          profile:profiles!posts_user_id_fkey(*),
-          post_images (id, image_url),
-          post_categories (categories (id, name)),
-          post_tags (tags (id, name))
-        `)
-        .or(`title.ilike.%${query}%,description.ilike.%${query}%,profiles!posts_user_id_fkey.username.ilike.%${query}%`)
+        *,
+        profile:profiles!posts_user_id_fkey(*),
+        post_images (id, image_url),
+        post_categories (categories (id, name)),
+        post_tags (tags (id, name))
+      `)
+        .or(`title.ilike.%${query}%,description.ilike.%${query}%`)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -127,7 +126,15 @@ export const PostsProvider = ({ children }: { children: React.ReactNode }) => {
           categories: post.post_categories?.map((pc: any) => pc.categories).filter(Boolean) || [],
           tags: post.post_tags?.map((pt: any) => pt.tags).filter(Boolean) || [],
         }));
-        setSearchResults(formattedPosts);
+
+        // Filtrar também por username no lado do cliente
+        const filtered = formattedPosts.filter(post =>
+          post.title.toLowerCase().includes(query.toLowerCase()) ||
+          post.description.toLowerCase().includes(query.toLowerCase()) ||
+          post.profile?.slug?.toLowerCase().includes(query.toLowerCase())
+        );
+
+        setSearchResults(filtered);
       }
     } catch (error) {
       console.error('Error searching posts:', error);
