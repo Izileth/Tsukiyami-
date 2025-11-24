@@ -1,147 +1,69 @@
-import React from 'react';
-import { View, Text } from 'react-native';
-import { ToastConfig, ToastConfigParams } from 'react-native-toast-message';
-import { Ionicons } from '@expo/vector-icons';
 
-interface CustomToastProps extends ToastConfigParams<any> {
+import { View, Text } from 'react-native';
+import { Feather } from '@expo/vector-icons';
+
+interface ToastProps {
   text1?: string;
   text2?: string;
 }
-
-export const toastConfig: ToastConfig = {
-  success: ({ text1, text2, ...rest }: CustomToastProps) => (
-    <View className="mx-6 bg-white rounded-2xl overflow-hidden shadow-lg" style={{ 
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.1,
-      shadowRadius: 12,
-      elevation: 8,
-    }}>
-      {/* Barra lateral minimalista */}
-      <View className="absolute left-0 top-0 bottom-0 w-1 bg-black" />
-      
-      <View className="flex-row items-start px-5 py-4 pl-6">
-        {/* Ícone */}
-        <View className="w-8 h-8 rounded-full bg-black justify-center items-center mr-3 mt-0.5">
-          <Ionicons name="checkmark" size={18} color="#fff" />
-        </View>
-        
-        {/* Conteúdo */}
-        <View className="flex-1">
-          {text1 && (
-            <Text className="text-black font-bold text-[15px] leading-5 mb-0.5">
-              {text1}
-            </Text>
-          )}
-          {text2 && (
-            <Text className="text-black/60 text-[13px] leading-5 mt-1">
-              {text2}
-            </Text>
-          )}
-        </View>
+export const toastConfig = {
+  success: (props: ToastProps) => (
+    <View className="w-[100%]  bg-black  border-l border-white p-5 flex-row items-start shadow-2xl">
+      <View className="bg-white rounded-full p-1.5 mt-0.5">
+        <Feather name="check" size={16} color="#000000" />
       </View>
+      <View className="ml-4 flex-1">
+        <Text className="text-white font-bold text-base mb-1">{props.text1}</Text>
+        {props.text2 && (
+          <Text className="text-neutral-400 text-sm leading-5">{props.text2}</Text>
+        )}
+      </View>
+      <Feather name="x" size={18} color="#fff" className="ml-2" />
     </View>
   ),
 
-  error: ({ text1, text2, ...rest }: CustomToastProps) => (
-    <View className="mx-6 bg-white rounded-2xl overflow-hidden shadow-lg" style={{ 
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.1,
-      shadowRadius: 12,
-      elevation: 8,
-    }}>
-      {/* Barra lateral vermelha */}
-      <View className="absolute left-0 top-0 bottom-0 w-1 bg-red-500" />
-      
-      <View className="flex-row items-start px-5 py-4 pl-6">
-        {/* Ícone */}
-        <View className="w-8 h-8 rounded-full bg-red-500 justify-center items-center mr-3 mt-0.5">
-          <Ionicons name="close" size={18} color="#fff" />
-        </View>
-        
-        {/* Conteúdo */}
-        <View className="flex-1">
-          {text1 && (
-            <Text className="text-black font-bold text-[15px] leading-5 mb-0.5">
-              {text1}
-            </Text>
-          )}
-          {text2 && (
-            <Text className="text-black/60 text-[13px] leading-5 mt-1">
-              {text2}
-            </Text>
-          )}
-        </View>
+  error: (props: ToastProps) => (
+    <View className="w-[100%] bg-black border-l-4 border-neutral-300  p-5 flex-row items-start shadow-2xl">
+      <View className="bg-neutral-300 rounded-full p-1.5 mt-0.5">
+        <Feather name="x" size={16} color="#000000" />
       </View>
+      <View className="ml-4 flex-1">
+        <Text className="text-white font-bold text-base mb-1">{props.text1}</Text>
+        {props.text2 && (
+          <Text className="text-neutral-400 text-sm leading-5">{props.text2}</Text>
+        )}
+      </View>
+      <Feather name="x" size={18} color="#6B7280" className="ml-2" />
     </View>
   ),
 
-  info: ({ text1, text2, ...rest }: CustomToastProps) => (
-    <View className="mx-6 bg-white rounded-2xl overflow-hidden shadow-lg" style={{ 
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.1,
-      shadowRadius: 12,
-      elevation: 8,
-    }}>
-      {/* Barra lateral cinza */}
-      <View className="absolute left-0 top-0 bottom-0 w-1 bg-gray-400" />
-      
-      <View className="flex-row items-start px-5 py-4 pl-6">
-        {/* Ícone */}
-        <View className="w-8 h-8 rounded-full bg-gray-400 justify-center items-center mr-3 mt-0.5">
-          <Ionicons name="information" size={18} color="#fff" />
-        </View>
-        
-        {/* Conteúdo */}
-        <View className="flex-1">
-          {text1 && (
-            <Text className="text-black font-bold text-[15px] leading-5 mb-0.5">
-              {text1}
-            </Text>
-          )}
-          {text2 && (
-            <Text className="text-black/60 text-[13px] leading-5 mt-1">
-              {text2}
-            </Text>
-          )}
-        </View>
+  info: (props: ToastProps) => (
+    <View className="w-[100%] bg-black border-l-4 border-neutral-500   p-5 flex-row items-start shadow-2xl">
+      <View className="bg-neutral-500 rounded-full p-1.5 mt-0.5">
+        <Feather name="info" size={16} color="#000000" />
       </View>
+      <View className="ml-4 flex-1">
+        <Text className="text-white font-bold text-base mb-1">{props.text1}</Text>
+        {props.text2 && (
+          <Text className="text-neutral-400 text-sm leading-5">{props.text2}</Text>
+        )}
+      </View>
+      <Feather name="x" size={18} color="#6B7280" className="ml-2" />
     </View>
   ),
 
-  warning: ({ text1, text2, ...rest }: CustomToastProps) => (
-    <View className="mx-6 bg-white rounded-2xl overflow-hidden shadow-lg" style={{ 
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.1,
-      shadowRadius: 12,
-      elevation: 8,
-    }}>
-      {/* Barra lateral amarela/laranja */}
-      <View className="absolute left-0 top-0 bottom-0 w-1 bg-yellow-500" />
-      
-      <View className="flex-row items-start px-5 py-4 pl-6">
-        {/* Ícone */}
-        <View className="w-8 h-8 rounded-full bg-yellow-500 justify-center items-center mr-3 mt-0.5">
-          <Ionicons name="warning" size={18} color="#fff" />
-        </View>
-        
-        {/* Conteúdo */}
-        <View className="flex-1">
-          {text1 && (
-            <Text className="text-black font-bold text-[15px] leading-5 mb-0.5">
-              {text1}
-            </Text>
-          )}
-          {text2 && (
-            <Text className="text-black/60 text-[13px] leading-5 mt-1">
-              {text2}
-            </Text>
-          )}
-        </View>
+  warning: (props: ToastProps) => (
+    <View className="w-[100%] bg-black border-l-4 border-neutral-400  p-5 flex-row items-start shadow-2xl">
+      <View className="bg-neutral-400 rounded-full p-1.5 mt-0.5">
+        <Feather name="alert-triangle" size={16} color="#000000" />
       </View>
+      <View className="ml-4 flex-1">
+        <Text className="text-white font-bold text-base mb-1">{props.text1}</Text>
+        {props.text2 && (
+          <Text className="text-neutral-400 text-sm leading-5">{props.text2}</Text>
+        )}
+      </View>
+      <Feather name="x" size={18} color="#6B7280" className="ml-2" />
     </View>
   ),
 };

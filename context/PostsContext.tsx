@@ -49,6 +49,8 @@ type PostsContextType = {
   updatePostLikes: (postId: number, newLikesCount: number) => void;
   updatePostDislikes: (postId: number, newDislikesCount: number) => void;
   updatePostCommentsCount: (postId: number, newCommentsCount: number) => void;
+  searchPosts: (query: string) => Promise<void>;
+  searchResults: Post[];
 };
 
 const PostsContext = createContext<PostsContextType | undefined>(undefined);
@@ -66,6 +68,7 @@ export const PostsProvider = ({ children }: { children: React.ReactNode }) => {
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewedPosts, setViewedPosts] = useState<Set<number>>(new Set());
+  const [searchResults, setSearchResults] = useState<Post[]>([]);
 
   const fetchPosts = useCallback(async () => {
     try {
@@ -91,9 +94,43 @@ export const PostsProvider = ({ children }: { children: React.ReactNode }) => {
           tags: post.post_tags?.map((pt: any) => pt.tags).filter(Boolean) || [],
         }));
         setPosts(formattedPosts);
+        setSearchResults(formattedPosts); // Initialize search results with all posts
       }
     } catch (error) {
       console.error('Error fetching posts:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const searchPosts = useCallback(async (query: string) => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('posts')
+        .select(`
+          *,
+          profile:profiles!posts_user_id_fkey(*),
+          post_images (id, image_url),
+          post_categories (categories (id, name)),
+          post_tags (tags (id, name))
+        `)
+        .or(`title.ilike.%${query}%,description.ilike.%${query}%,profiles!posts_user_id_fkey.username.ilike.%${query}%`)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      if (data) {
+        const formattedPosts: Post[] = data.map((post: any) => ({
+          ...post,
+          post_images: post.post_images || [],
+          categories: post.post_categories?.map((pc: any) => pc.categories).filter(Boolean) || [],
+          tags: post.post_tags?.map((pt: any) => pt.tags).filter(Boolean) || [],
+        }));
+        setSearchResults(formattedPosts);
+      }
+    } catch (error) {
+      console.error('Error searching posts:', error);
     } finally {
       setLoading(false);
     }
@@ -273,6 +310,8 @@ export const PostsProvider = ({ children }: { children: React.ReactNode }) => {
     updatePostLikes,
     updatePostDislikes,
     updatePostCommentsCount,
+    searchPosts,
+    searchResults,
   };
 
   return <PostsContext.Provider value={value}>{children}</PostsContext.Provider>;

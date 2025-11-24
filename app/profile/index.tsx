@@ -11,9 +11,15 @@ import { usePosts } from '@/context/PostsContext';
 import { Profile, useProfile } from '@/context/ProfileContext';
 import { useStorage } from '@/hooks/use-storage';
 import { supabase } from '@/utils/supabase';
-
+import Toast from 'react-native-toast-message';
 function handleLogout() {
   supabase.auth.signOut();
+  Toast.show({
+    type: 'success',
+    text1: 'Logout realizado com sucesso',
+    position: 'top',
+    visibilityTime: 5000,
+  })
 }
 
 export default function ProfileScreen() {

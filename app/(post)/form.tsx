@@ -12,7 +12,7 @@ import { useStorage } from '@/hooks/use-storage';
 import { supabase } from '@/utils/supabase';
 import { CreatableSelector, Item } from '@/components/CreatableSelector';
 import ImageCarousel from '@/components/image-carousel';
-
+import Toast from 'react-native-toast-message';
 export default function PostFormScreen() {
   const { posts, createPost, updatePost } = usePosts();
   const { profile } = useProfile();
@@ -78,13 +78,23 @@ export default function PostFormScreen() {
               postToEdit.tags?.map((tag: Tag) => ({ id: tag.id, name: tag.name })) || []
             );
           } else {
-            Alert.alert("Error", "Post not found.");
+            Toast.show({
+              type: 'error',
+              text1: 'Post não encontrado',
+              position: 'top',
+              visibilityTime: 5000,
+            })
             router.back();
           }
         }
       } catch (error) {
         console.error("Failed to initialize form", error);
-        Alert.alert("Error", "Failed to load form data.");
+        Toast.show({
+          type: 'error',
+          text1: 'Falha ao inicializar o formulário',
+          position: 'top',
+          visibilityTime: 5000,
+        })
       } finally {
         setIsInitializing(false);
       }
@@ -170,10 +180,20 @@ export default function PostFormScreen() {
       if (post) {
         const finalImageUrls = [...existingImageUrls, ...newImageUrls];
         await updatePost(post.id, postData, finalImageUrls, finalCategoryIds, finalTagIds);
-        Alert.alert("Success", "Post updated successfully!");
+        Toast.show({
+          type: 'success',
+          text1: 'Postagem atualizada com sucesso',
+          position: 'top',
+          visibilityTime: 5000,
+        })
       } else {
         await createPost(postData, newImageUrls, finalCategoryIds, finalTagIds);
-        Alert.alert("Success", "Post created successfully!");
+        Toast.show({
+          type: 'success',
+          text1: 'Postagem criada com sucesso',
+          position: 'top',
+          visibilityTime: 5000,
+        })
       }
 
       router.back();

@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity} from 'react-native';
 import { Link } from 'expo-router';
 import { MotiView } from 'moti';
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '@/utils/supabase';
-
+import Toast from 'react-native-toast-message';
 export default function AuthScreen() {
   const [email, setEmail] = useState<string>(''); // Add type annotation for email state
   const [password, setPassword] = useState('');
@@ -20,9 +20,21 @@ export default function AuthScreen() {
     });
 
     if (error) {
-      Alert.alert('Erro', error.message);
+      Toast.show({
+        type: 'error',
+        text1: 'Erro ao fazer login',
+        text2: error.message,
+        position: 'top',
+        visibilityTime: 5000,
+      });
     }
     setLoading(false);
+    Toast.show({
+      type: 'success',
+      text1: 'Login realizado com sucesso',
+      position: 'top',
+      visibilityTime: 5000,
+    })
   }
 
   return (
