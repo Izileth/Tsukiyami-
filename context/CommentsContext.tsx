@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState } from 'react';
 import { supabase } from '@/utils/supabase';
 import { PostgrestError } from '@supabase/supabase-js';
 import { usePosts } from './PostsContext';
+import Toast from 'react-native-toast-message';
 
 // --- Interfaces ---
 export interface Comment {
@@ -45,6 +46,7 @@ export const CommentsProvider = ({ children }: { children: React.ReactNode }) =>
   const { posts, updatePostCommentsCount } = usePosts();
 
   const fetchComments = async (postId: number) => {
+    console.log(`[fetchComments] Fetching comments for post ${postId}`);
     setLoading(true);
     const { data, error } = await supabase
       .from('comments')
@@ -52,19 +54,25 @@ export const CommentsProvider = ({ children }: { children: React.ReactNode }) =>
       .eq('post_id', postId)
       .order('created_at', { ascending: true });
 
+    setLoading(false);
     if (error) {
-      console.error('Error fetching comments:', error);
+      console.error('[fetchComments] Error fetching comments:', error);
+      Toast.show({ type: 'error', text1: 'Error', text2: 'Could not fetch comments.' });
     } else {
+      console.log(`[fetchComments] Found ${data?.length || 0} comments.`);
       setComments(data || []);
     }
-    setLoading(false);
   };
 
   const addComment = async (postId: number, content: string, parentCommentId: number | null = null) => {
+    console.log(`[addComment] Attempting to add comment to post ${postId}`);
     setLoading(true);
+
     const { data: { session } } = await supabase.auth.getSession();
     if (!session?.user) {
       setLoading(false);
+      console.error('[addComment] User not authenticated.');
+      Toast.show({ type: 'error', text1: 'Authentication Error', text2: 'You must be logged in to comment.' });
       return { data: null, error: { message: "User not authenticated", code: "401", details: "No active session", hint: "Login required" } as PostgrestError };
     }
 
@@ -75,29 +83,33 @@ export const CommentsProvider = ({ children }: { children: React.ReactNode }) =>
 
     setLoading(false);
     if (error) {
-      console.error('Error adding comment:', error);
+      console.error('[addComment] Error adding comment:', error);
+      Toast.show({ type: 'error', text1: 'Error', text2: 'Failed to add your comment.' });
       return { data: null, error };
     }
 
     if (data && data.length > 0) {
       const newComment = data[0];
+      console.log('[addComment] Comment added successfully:', newComment);
       setComments((prev) => [...prev, newComment]);
-      // Update count in PostsContext
+      
       const post = posts.find(p => p.id === postId);
       if (post) {
         updatePostCommentsCount(postId, post.comments_count + 1);
       }
+      Toast.show({ type: 'success', text1: 'Success', text2: 'Your comment has been posted!' });
       return { data: newComment, error: null };
     }
-    return { data: null, error: { message: "Failed to retrieve new comment.", code: "404", details: "", hint: ""} as PostgrestError };
-  };
 
+    console.error('[addComment] Failed to retrieve new comment after insert.');
+    Toast.show({ type: 'error', text1: 'Error', text2: 'Something went wrong.' });
+    return { data: null, error: { message: "Failed to retrieve new comment.", code: "404", details: "", hint: "" } as PostgrestError };
+  };
 
   const updateComment = async (commentId: number, newContent: string) => {
     setLoading(true);
     console.log(`[updateComment] Attempting to update comment ${commentId}`);
 
-    // Step 1: Perform the update.
     const { error: updateError } = await supabase
       .from('comments')
       .update({ content: newContent, updated_at: new Date().toISOString() })
@@ -106,12 +118,11 @@ export const CommentsProvider = ({ children }: { children: React.ReactNode }) =>
     if (updateError) {
       console.error('[updateComment] Error during UPDATE step:', updateError);
       setLoading(false);
+      Toast.show({ type: 'error', text1: 'Error', text2: 'Failed to update your comment.' });
       return { data: null, error: updateError };
     }
 
     console.log('[updateComment] UPDATE step successful. Fetching updated comment...');
-
-    // Step 2: Fetch the updated data.
     const { data: selectData, error: selectError } = await supabase
       .from('comments')
       .select(`*, profiles(id, avatar_url, name, slug)`)
@@ -121,6 +132,7 @@ export const CommentsProvider = ({ children }: { children: React.ReactNode }) =>
     setLoading(false);
     if (selectError) {
       console.error('[updateComment] Error during SELECT step:', selectError);
+      Toast.show({ type: 'error', text1: 'Error', text2: 'Could not retrieve the updated comment.' });
       return { data: null, error: selectError };
     }
     
@@ -131,13 +143,19 @@ export const CommentsProvider = ({ children }: { children: React.ReactNode }) =>
       console.log('[updateComment] New local state:', newComments);
       return newComments;
     });
+    Toast.show({ type: 'success', text1: 'Success', text2: 'Comment updated successfully!' });
     return { data: selectData, error: null };
   };
+
   const deleteComment = async (commentId: number) => {
     setLoading(true);
+    console.log(`[deleteComment] Attempting to delete comment ${commentId}`);
+
     const commentToDelete = comments.find(c => c.id === commentId);
     if (!commentToDelete) {
       setLoading(false);
+      console.error(`[deleteComment] Comment with ID ${commentId} not found in local state.`);
+      Toast.show({ type: 'error', text1: 'Error', text2: 'Comment not found.' });
       return { error: { message: "Comment not found", code: "404", details: "", hint: "" } as PostgrestError };
     }
 
@@ -145,16 +163,19 @@ export const CommentsProvider = ({ children }: { children: React.ReactNode }) =>
 
     setLoading(false);
     if (error) {
-      console.error('Error deleting comment:', error);
+      console.error('[deleteComment] Error deleting comment:', error);
+      Toast.show({ type: 'error', text1: 'Error', text2: 'Failed to delete comment.' });
       return { error };
     }
 
+    console.log(`[deleteComment] Comment ${commentId} deleted successfully from DB.`);
     setComments((prev) => prev.filter((comment) => comment.id !== commentId));
-    // Update count in PostsContext
+    
     const post = posts.find(p => p.id === commentToDelete.post_id);
     if (post) {
       updatePostCommentsCount(commentToDelete.post_id, post.comments_count - 1);
     }
+    Toast.show({ type: 'success', text1: 'Success', text2: 'Comment deleted.' });
     return { error: null };
   };
 

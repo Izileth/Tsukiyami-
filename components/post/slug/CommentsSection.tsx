@@ -68,7 +68,7 @@ export function CommentsSection({
   };
 
   return (
-    <View className="px-6 mt-8">
+    <View className="px-6 mt-8 mb-20 flex-1">
       {/* Header */}
       <View className="flex-row items-center justify-between mb-6">
         <View className="flex-row items-center">

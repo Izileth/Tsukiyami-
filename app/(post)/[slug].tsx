@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback, useMemo, useRef } from 'react';
-import { ScrollView, View, ActivityIndicator, Text } from 'react-native';
+import { ScrollView, View, ActivityIndicator, Text, KeyboardAvoidingView, Platform } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { usePosts } from '@/context/PostsContext';
 import { useProfile } from '@/context/ProfileContext';
@@ -46,8 +46,9 @@ export default function PostScreen() {
   // Estados locais
   const [initialLoading, setInitialLoading] = useState(true);
   
-  // Ref para evitar múltiplas chamadas
+  // Refs
   const hasFetchedRef = useRef(false);
+  const scrollViewRef = useRef<ScrollView>(null);
 
   // Buscar post do contexto - simplificado
   const post = useMemo(() => {
@@ -94,7 +95,12 @@ export default function PostScreen() {
   // Handlers - memoizados corretamente
   const handleAddComment = useCallback(async (commentText: string) => {
     if (!profile || !post) return;
-    await addComment(post.id, commentText);
+    const result = await addComment(post.id, commentText);
+    if (result && !result.error) {
+      setTimeout(() => {
+        scrollViewRef.current?.scrollToEnd({ animated: true });
+      }, 300); // Delay to allow UI to update
+    }
   }, [profile?.id, post?.id, addComment]); // Use apenas IDs
 
   const handleLike = useCallback(async () => {
@@ -127,32 +133,39 @@ export default function PostScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-white">
-      <ScrollView
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         className="flex-1"
-        showsVerticalScrollIndicator={false}
+        keyboardVerticalOffset={100} // Adjust this value based on your header's height
       >
-        <PostHeader post={post} />
-        <PostMeta
-          post={post}
-          likesCount={currentLikesCount}
-          dislikesCount={currentDislikesCount}
-          hasLiked={hasLiked}
-          hasDisliked={hasDisliked}
-          onLike={handleLike}
-          onDislike={handleDislike}
-          likesLoading={reactionLoading}
-          dislikesLoading={reactionLoading}
-        />
-        <PostContent post={post} />
-        <CommentsSection
-          comments={comments}
-          profile={profile}
-          commentsLoading={commentsLoading}
-          onAddComment={handleAddComment}
-          onUpdateComment={updateComment}
-          onDeleteComment={deleteComment}
-        />
-      </ScrollView>
+        <ScrollView
+          ref={scrollViewRef}
+          className="flex-1"
+          showsVerticalScrollIndicator={false}
+        >
+          <PostHeader post={post} />
+          <PostMeta
+            post={post}
+            likesCount={currentLikesCount}
+            dislikesCount={currentDislikesCount}
+            hasLiked={hasLiked}
+            hasDisliked={hasDisliked}
+            onLike={handleLike}
+            onDislike={handleDislike}
+            likesLoading={reactionLoading}
+            dislikesLoading={reactionLoading}
+          />
+          <PostContent post={post} />
+          <CommentsSection
+            comments={comments}
+            profile={profile}
+            commentsLoading={commentsLoading}
+            onAddComment={handleAddComment}
+            onUpdateComment={updateComment}
+            onDeleteComment={deleteComment}
+          />
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
