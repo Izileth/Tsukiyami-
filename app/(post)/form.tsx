@@ -208,7 +208,7 @@ export default function PostFormScreen() {
   if (isInitializing) {
     return (
       <View className="flex-1 justify-center items-center p-4 bg-white">
-        <ActivityIndicator size="large" />
+            <ActivityIndicator size="large" color="#000000" />  
         <Text className="mt-2 text-gray-500">Buscando Publicação...</Text>
       </View>
     )
