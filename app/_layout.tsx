@@ -1,11 +1,10 @@
 import 'react-native-url-polyfill/auto';
-import React, {  useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
 import '@/global.css';
 import '@/utils/polyfills'; // se tiver alias configurado
-
 
 import { AuthProvider, useAuth } from '@/context/AuthContext';
 import { ProfileProvider } from '@/context/ProfileContext';
@@ -16,6 +15,7 @@ import { ReactionsProvider } from '@/context/LikesContext';
 import GlobalHeader from '@/components/global-header';
 import Toast from 'react-native-toast-message';
 import { toastConfig } from '@/components/ui/toasts';
+import LoadingScreen from './_loading';
 
 // Keep the native splash screen visible
 SplashScreen.preventAutoHideAsync();
@@ -31,12 +31,12 @@ function RootLayoutNav() {
       return;
     }
 
-    const inAuthGroup = segments[0] === 'auth' || segments[0] === 'register';
+    const inAuthGroup = segments[0] === '(auth)';
 
     if (!session && !inAuthGroup) {
       // Redirect to the login page if the user is not signed in
       // and not on an auth page.
-      router.replace('/auth');
+      router.replace('/(auth)/login');
     } else if (session && inAuthGroup) {
       // Redirect away from auth pages if the user is signed in.
       router.replace('/');
@@ -45,13 +45,40 @@ function RootLayoutNav() {
 
   return (
     <>
-      <Stack initialRouteName={session ? 'index' : 'auth'} screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="index" options={{ headerShown: false }} />
-        <Stack.Screen name="explore" options={{ headerShown: false }} />
-        <Stack.Screen name="auth" options={{ headerShown: false }} />
-        <Stack.Screen name="register" options={{ headerShown: false }} />
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="index" />
+        <Stack.Screen name="explore" />
+        <Stack.Screen name="(auth)" />
+        <Stack.Screen name="(post)" />
+        <Stack.Screen name="(profile)" />
       </Stack>
-      <StatusBar style="auto" />
+      <StatusBar style="dark" />
+    </>
+  );
+}
+
+// Wrapper component to handle loading screen
+function AppLayout() {
+  const { loading } = useAuth();
+  const [isSplashAnimationComplete, setIsSplashAnimationComplete] = useState(false);
+
+  // App is ready when the auth session loading is finished.
+  const isAppReady = !loading;
+
+  if (!isSplashAnimationComplete) {
+    return (
+      <LoadingScreen
+        isAppReady={isAppReady}
+        onExitAnimationFinish={() => setIsSplashAnimationComplete(true)}
+      />
+    );
+  }
+
+  return (
+    <>
+      <GlobalHeader />
+      <RootLayoutNav />
+      <Toast config={toastConfig} />
     </>
   );
 }
@@ -67,9 +94,7 @@ export default function RootLayout() {
         <PostsProvider>
           <CommentsProvider>
             <ReactionsProvider>
-              <GlobalHeader />
-              <RootLayoutNav />
-              <Toast config={toastConfig} />
+              <AppLayout />
             </ReactionsProvider>
           </CommentsProvider>
         </PostsProvider>

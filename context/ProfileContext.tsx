@@ -66,6 +66,12 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
         } finally {
           setLoading(false);
         }
+      } else {
+        // Clear profile data if there is no session
+        setProfile(null);
+        setFollowerCount(0);
+        setFollowingCount(0);
+        setLoading(false);
       }
     };
 

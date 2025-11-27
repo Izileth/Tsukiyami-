@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { ScrollView, SafeAreaView, StatusBar, View, Text } from "react-native";
+import { ScrollView, SafeAreaView, View, Text } from "react-native";
 import { usePosts } from "@/context/PostsContext";
 import { Loading } from "@/components/home/Loading";
 import { PostList } from "@/components/home/PostList";
@@ -31,7 +31,6 @@ export default function ExploreScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-white">
-      <StatusBar style="dark" />
       <SearchBar
         searchText={searchText}
         onSearchTextChange={setSearchText}

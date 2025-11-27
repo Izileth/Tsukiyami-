@@ -1,7 +1,5 @@
-import { View, Text } from 'react-native';
-import { MotiView } from 'moti';
-import { useEffect } from 'react';
-import { Easing } from 'react-native-reanimated';
+import { View, Text, Animated } from 'react-native';
+import { useEffect, useState, useRef } from 'react';
 
 export default function LoadingScreen({
   isAppReady,
@@ -10,114 +8,236 @@ export default function LoadingScreen({
   isAppReady: boolean;
   onExitAnimationFinish: () => void;
 }) {
+  const [timeElapsed, setTimeElapsed] = useState(false);
+  
+  // Animações
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const kanjiScale = useRef(new Animated.Value(0.8)).current;
+  const romajiOpacity = useRef(new Animated.Value(0)).current;
+  const taglineOpacity = useRef(new Animated.Value(0)).current;
+  const screenOpacity = useRef(new Animated.Value(1)).current;
+  
+  const dot1Opacity = useRef(new Animated.Value(0.3)).current;
+  const dot2Opacity = useRef(new Animated.Value(0.3)).current;
+  const dot3Opacity = useRef(new Animated.Value(0.3)).current;
 
   useEffect(() => {
-    if (isAppReady) {
-      // Aguarda a animação de saída completar
-      setTimeout(() => {
+    // Timer mínimo de 5 segundos
+    const timer = setTimeout(() => {
+      setTimeElapsed(true);
+    }, 5000);
+
+    // Sequência de entrada
+    Animated.sequence([
+      // Kanji aparece
+      Animated.parallel([
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 800,
+          delay: 300,
+          useNativeDriver: true,
+        }),
+        Animated.spring(kanjiScale, {
+          toValue: 1,
+          delay: 300,
+          tension: 50,
+          friction: 7,
+          useNativeDriver: true,
+        }),
+      ]),
+      // Romaji aparece
+      Animated.timing(romajiOpacity, {
+        toValue: 1,
+        duration: 600,
+        delay: 200,
+        useNativeDriver: true,
+      }),
+      // Tagline aparece
+      Animated.timing(taglineOpacity, {
+        toValue: 1,
+        duration: 600,
+        useNativeDriver: true,
+      }),
+    ]).start();
+
+    // Animação dos pontos (loop)
+    const animateDots = () => {
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(dot1Opacity, {
+            toValue: 1,
+            duration: 400,
+            useNativeDriver: true,
+          }),
+          Animated.timing(dot2Opacity, {
+            toValue: 1,
+            duration: 400,
+            useNativeDriver: true,
+          }),
+          Animated.timing(dot3Opacity, {
+            toValue: 1,
+            duration: 400,
+            useNativeDriver: true,
+          }),
+          Animated.parallel([
+            Animated.timing(dot1Opacity, {
+              toValue: 0.3,
+              duration: 400,
+              useNativeDriver: true,
+            }),
+            Animated.timing(dot2Opacity, {
+              toValue: 0.3,
+              duration: 400,
+              useNativeDriver: true,
+            }),
+            Animated.timing(dot3Opacity, {
+              toValue: 0.3,
+              duration: 400,
+              useNativeDriver: true,
+            }),
+          ]),
+        ])
+      ).start();
+    };
+
+    const dotsTimer = setTimeout(animateDots, 1500);
+
+    return () => {
+      clearTimeout(timer);
+      clearTimeout(dotsTimer);
+    };
+  }, []);
+
+  const startExit = isAppReady && timeElapsed;
+
+  useEffect(() => {
+    if (startExit) {
+      // Animação de saída
+      Animated.timing(screenOpacity, {
+        toValue: 0,
+        duration: 600,
+        useNativeDriver: true,
+      }).start(() => {
         onExitAnimationFinish();
-      }, 800);
+      });
     }
-  }, [isAppReady, onExitAnimationFinish]);
+  }, [startExit, onExitAnimationFinish]);
 
   return (
-    <MotiView
-      from={{ opacity: 1 }}
-      animate={{ opacity: isAppReady ? 0 : 1 }}
-      transition={{
-        type: 'timing',
-        duration: 600,
-        easing: Easing.out(Easing.ease),
+    <Animated.View
+      style={{
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: '#ffffff',
+        opacity: screenOpacity,
       }}
-      className="flex-1 justify-center items-center bg-white"
     >
-      {/* Nome do app - TSUKIYAMI em kanji e romaji */}
-      <MotiView
-        from={{
-          opacity: 0,
-          translateY: 20
+      {/* Kanji 月闇 */}
+      <Animated.View
+        style={{
+          opacity: fadeAnim,
+          transform: [{ scale: kanjiScale }],
+          marginBottom: 8,
         }}
-        animate={{
-          opacity: isAppReady ? 0 : 1,
-          translateY: isAppReady ? -30 : 0
-        }}
-        transition={{
-          opacity: {
-            type: 'timing',
-            duration: 800,
-            delay: 400,
-            easing: Easing.out(Easing.ease),
-          },
-          translateY: {
-            type: 'spring',
-            damping: 15,
-            delay: 400,
-          }
-        }}
-        className="mt-12 items-center"
       >
-        {/* Kanji 月闇 (Tsukiyami - Lua + Escuridão) */}
-        <Text className="text-5xl font-light text-black tracking-wider mb-2">
+        <Text
+          style={{
+            fontSize: 72,
+            fontWeight: '300',
+            color: '#1a1a1a',
+            letterSpacing: 8,
+          }}
+        >
           月闇
         </Text>
+      </Animated.View>
 
-        {/* Nome em romaji */}
-        <Text className="text-xl font-bold text-black tracking-widest">
+      {/* Nome em romaji */}
+      <Animated.View
+        style={{
+          opacity: romajiOpacity,
+          marginBottom: 24,
+        }}
+      >
+        <Text
+          style={{
+            fontSize: 24,
+            fontWeight: '700',
+            color: '#1a1a1a',
+            letterSpacing: 6,
+          }}
+        >
           TSUKIYAMI
         </Text>
-      </MotiView>
+      </Animated.View>
 
-      {/* Subtítulo/Tagline */}
-      <MotiView
-        from={{
-          opacity: 0,
-          translateY: 10
+      {/* Linha decorativa */}
+      <Animated.View
+        style={{
+          width: 80,
+          height: 1,
+          backgroundColor: '#666666',
+          marginBottom: 16,
+          opacity: taglineOpacity,
         }}
-        animate={{
-          opacity: isAppReady ? 0 : 1,
-          translateY: isAppReady ? -20 : 0
+      />
+
+      {/* Tagline */}
+      <Animated.View
+        style={{
+          opacity: taglineOpacity,
         }}
-        transition={{
-          opacity: {
-            type: 'timing',
-            duration: 800,
-            delay: 600,
-            easing: Easing.out(Easing.ease),
-          },
-          translateY: {
-            type: 'spring',
-            damping: 15,
-            delay: 600,
-          }
-        }}
-        className="mt-3"
       >
-        <Text className="text-sm text-black/60 tracking-widest uppercase">
+        <Text
+          style={{
+            fontSize: 13,
+            fontWeight: '400',
+            color: '#666666',
+            letterSpacing: 3,
+            textTransform: 'uppercase',
+          }}
+        >
           Share Your Passion
         </Text>
-      </MotiView>
+      </Animated.View>
 
       {/* Indicador de loading (3 pontos) */}
-      <View className="flex-row mt-16 space-x-2">
-        {[0, 1, 2].map((index) => (
-          <MotiView
-            key={index}
-            from={{ opacity: 0.3, scale: 1 }}
-            animate={{
-              opacity: isAppReady ? 0 : [0.3, 1, 0.3],
-              scale: isAppReady ? 0 : [1, 1.2, 1]
-            }}
-            transition={{
-              type: 'timing',
-              duration: 1500,
-              loop: !isAppReady,
-              delay: index * 200,
-              easing: Easing.inOut(Easing.ease),
-            }}
-            className="w-2 h-2 bg-black rounded-full"
-          />
-        ))}
+      <View
+        style={{
+          flexDirection: 'row',
+          marginTop: 48,
+          gap: 8,
+        }}
+      >
+        <Animated.View
+          style={{
+            width: 8,
+            height: 8,
+            borderRadius: 4,
+            backgroundColor: '#1a1a1a',
+            opacity: dot1Opacity,
+          }}
+        />
+        <Animated.View
+          style={{
+            width: 8,
+            height: 8,
+            borderRadius: 4,
+            backgroundColor: '#1a1a1a',
+            opacity: dot2Opacity,
+          }}
+        />
+        <Animated.View
+          style={{
+            width: 8,
+            height: 8,
+            borderRadius: 4,
+            backgroundColor: '#1a1a1a',
+            opacity: dot3Opacity,
+          }}
+        />
       </View>
-    </MotiView>
+    </Animated.View>
   );
 }

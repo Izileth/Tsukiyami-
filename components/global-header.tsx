@@ -31,7 +31,7 @@ const GlobalHeader = () => {
       <View className="flex-row justify-between items-center px-6 py-3">
         {/* Logo */}
         <TouchableOpacity 
-          onPress={() => router.push('/')}
+          onPress={() => router.push('/(profile)')}
           activeOpacity={0.7}
           className="flex-row items-center"
         >
@@ -73,7 +73,7 @@ const GlobalHeader = () => {
 
           {/* Profile Avatar */}
           <TouchableOpacity 
-            onPress={() => router.push('/profile')}
+            onPress={() => router.push('/(profile)')}
             activeOpacity={0.7}
             className="ml-2"
           >
