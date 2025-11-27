@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity} from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView} from 'react-native';
 import { Link } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '@/utils/supabase';
@@ -37,12 +37,18 @@ export default function AuthScreen() {
   }
 
   return (
-    <View className="flex-1 justify-center items-center bg-white px-6">
-
-      {/* Card do formulário */}
-      <View
-        className="w-full"
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      style={{ flex: 1 }}
+    >
+      <ScrollView
+        contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', paddingHorizontal: 24, paddingVertical: 40 }}
+        showsVerticalScrollIndicator={false}
+        className="bg-white"
       >
+        <View className="flex-1 justify-center items-center">
+          {/* Card do formulário */}
+          <View className="w-full">
         {/* Cabeçalho */}
         <View className="mb-8">
           <Text className="text-3xl font-bold text-black mb-2 tracking-tight">
@@ -168,13 +174,15 @@ export default function AuthScreen() {
           <Text className="text-black/60 text-sm">Não possui uma conta? </Text>
           <Link href="/register" asChild>
             <TouchableOpacity activeOpacity={0.7}>
-              <Text className="text-black font-bold text-sm tracking-wide">
+              <Text className="text-black underline font-bold text-sm tracking-wide">
                 Criar Conta
               </Text>
             </TouchableOpacity>
           </Link>
         </View>
-      </View>
+          </View>
+        </View>
+      </ScrollView>
 
       {/* Decoração minimalista */}
       <View
@@ -184,6 +192,6 @@ export default function AuthScreen() {
       <View
         className="absolute top-0 left-0 w-64 h-64 bg-black rounded-full -ml-32 -mt-32"
       />
-    </View>
+    </KeyboardAvoidingView>
   );
 }

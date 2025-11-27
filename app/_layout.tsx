@@ -11,8 +11,8 @@ import { ProfileProvider } from '@/context/ProfileContext';
 import { PostsProvider } from '@/context/PostsContext';
 import { CommentsProvider } from '@/context/CommentsContext';
 import { ReactionsProvider } from '@/context/LikesContext';
-
 import GlobalHeader from '@/components/global-header';
+
 import Toast from 'react-native-toast-message';
 import { toastConfig } from '@/components/ui/toasts';
 import LoadingScreen from './_loading';
@@ -24,14 +24,13 @@ function RootLayoutNav() {
   const { session, loading } = useAuth();
   const router = useRouter();
   const segments = useSegments();
+  const inAuthGroup = segments[0] === '(auth)';
 
   useEffect(() => {
     // Wait for the session to be loaded
     if (loading) {
       return;
     }
-
-    const inAuthGroup = segments[0] === '(auth)';
 
     if (!session && !inAuthGroup) {
       // Redirect to the login page if the user is not signed in
@@ -45,6 +44,7 @@ function RootLayoutNav() {
 
   return (
     <>
+      {!inAuthGroup && <GlobalHeader />}
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="index" />
         <Stack.Screen name="explore" />
@@ -76,7 +76,6 @@ function AppLayout() {
 
   return (
     <>
-      <GlobalHeader />
       <RootLayoutNav />
       <Toast config={toastConfig} />
     </>
