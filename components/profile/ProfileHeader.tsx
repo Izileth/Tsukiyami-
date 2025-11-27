@@ -92,7 +92,7 @@ export function ProfileHeader({
                 </View>
               </TouchableOpacity>
             </Link>
-            <Link href="/profile/edit" asChild>
+            <Link href="/(profile)/edit" asChild>
               <TouchableOpacity className="rounded-full bg-black py-3 px-6">
                 <View className="flex-row items-center">
                   <Ionicons name="create-outline" size={18} color="white" />
