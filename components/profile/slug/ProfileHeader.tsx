@@ -10,6 +10,7 @@ interface ProfileHeaderProps {
   isFollowing: boolean;
   handleFollowToggle: () => void;
   loading: boolean;
+  isOwnProfile?: boolean; // Nova prop para identificar se é o próprio perfil
 }
 
 const isValidUrl = (url?: string | null): boolean => {
@@ -18,7 +19,13 @@ const isValidUrl = (url?: string | null): boolean => {
     return trimmedUrl.length > 0 && (trimmedUrl.startsWith('http://') || trimmedUrl.startsWith('https://'));
 };
 
-export const ProfileHeader = ({ profile, isFollowing, handleFollowToggle, loading }: ProfileHeaderProps) => {
+export const ProfileHeader = ({ 
+  profile, 
+  isFollowing, 
+  handleFollowToggle, 
+  loading,
+  isOwnProfile = false // Default false
+}: ProfileHeaderProps) => {
   const hasAvatar = isValidUrl(profile.avatar_url);
   const hasBanner = isValidUrl(profile.banner_url);
   const memberSince = profile.created_at
@@ -72,21 +79,27 @@ export const ProfileHeader = ({ profile, isFollowing, handleFollowToggle, loadin
             )}
           </View>
 
-          {/* Follow/Unfollow Button */}
-          <View className="flex-row gap-2">
-            <TouchableOpacity
-              className={`rounded-full py-3 px-6 ${isFollowing ? 'bg-gray-300' : 'bg-blue-500'}`}
-              onPress={handleFollowToggle}
-              disabled={loading} // Disable while action is in progress
-            >
-              <View className="flex-row items-center">
-                <Ionicons name={isFollowing ? "checkmark-outline" : "person-add-outline"} size={18} color={isFollowing ? "black" : "white"} />
-                <Text className={`font-bold ml-2 ${isFollowing ? 'text-black' : 'text-white'}`}>
-                  {isFollowing ? "Following" : "Follow"}
-                </Text>
-              </View>
-            </TouchableOpacity>
-          </View>
+          {/* Follow/Unfollow Button - Só aparece se NÃO for o próprio perfil */}
+          {!isOwnProfile && (
+            <View className="flex-row gap-2">
+              <TouchableOpacity
+                className={`rounded-full py-3 px-6 ${isFollowing ? 'bg-gray-300' : 'bg-blue-500'}`}
+                onPress={handleFollowToggle}
+                disabled={loading}
+              >
+                <View className="flex-row items-center">
+                  <Ionicons 
+                    name={isFollowing ? "checkmark-outline" : "person-add-outline"} 
+                    size={18} 
+                    color={isFollowing ? "black" : "white"} 
+                  />
+                  <Text className={`font-bold ml-2 ${isFollowing ? 'text-black' : 'text-white'}`}>
+                    {isFollowing ? "Following" : "Follow"}
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            </View>
+          )}
         </View>
 
         {/* Name & Position */}

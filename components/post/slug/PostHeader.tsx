@@ -3,6 +3,7 @@ import { View, Text, Image, TouchableOpacity } from 'react-native';
 import { Link } from 'expo-router';
 import { Post } from '@/context/PostsContext';
 
+
 interface PostHeaderProps {
   post: Post;
 }
@@ -19,11 +20,12 @@ export function PostHeader({ post }: PostHeaderProps) {
           />
         </View>
       )}
+      
       <View className="px-6">
         {/* Author Info */}
         {post.profile && (
           <Link href={{
-            pathname: '/profile/[slug]',
+            pathname: '/(profile)/[slug]',
             params: { slug: post?.profile?.slug || '' }
           }} asChild>
             <TouchableOpacity className="flex-row items-center mb-4">

@@ -8,11 +8,12 @@ import { ProfileHeader } from '@/components/profile/slug/ProfileHeader';
 import { Stats } from '@/components/profile/slug/Stats';
 import { UserPosts } from '@/components/profile/slug/UserPosts';
 import { ProfileDetails } from '@/components/profile/slug/ProfileDetails';
-
+import { useProfile } from '@/context/ProfileContext'; // Import useProfile
 
 export default function PublicProfileScreen() {
   const { slug } = useLocalSearchParams<{ slug: string }>();
   const { profile, posts, loading, isFollowing, followerCount, followingCount, handleFollowToggle, followLoading } = usePublicProfile(slug);
+  const { profile: currentUserProfile } = useProfile(); // Get authenticated user's profile
 
   if (loading || !profile) {
     return (
@@ -27,6 +28,9 @@ export default function PublicProfileScreen() {
       ? `${profile.first_name} ${profile.last_name}`
       : profile.first_name || profile.last_name || 'No Name');
 
+  // Determine if the viewed profile belongs to the current authenticated user
+  const isOwnProfile = currentUserProfile?.id === profile?.id;
+
   return (
     <SafeAreaView className="flex-1 bg-white">
       <StatusBar style='light' />
@@ -36,6 +40,7 @@ export default function PublicProfileScreen() {
           isFollowing={isFollowing}
           handleFollowToggle={handleFollowToggle}
           loading={followLoading}
+          isOwnProfile={isOwnProfile} // Pass the calculated boolean
         />
 
         <Stats

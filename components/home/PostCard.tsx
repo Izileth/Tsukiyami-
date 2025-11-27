@@ -38,7 +38,7 @@ export const PostCard = ({ post }: PostCardProps) => {
           {/* Author Info */}
           {post.profile && (
             <Link href={{
-              pathname: '/profile/[slug]',
+              pathname: '/(profile)/[slug]',
               params: { slug: post?.profile?.slug || '' }
             }} asChild>
               <TouchableOpacity className="flex-row items-center mb-4">
