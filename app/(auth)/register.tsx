@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Alert, ScrollView } from 'react-native';
 import { Link } from 'expo-router';
-import { MotiView } from 'moti';
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '@/utils/supabase';
 
@@ -63,10 +62,7 @@ export default function RegisterScreen() {
     >
 
       {/* Card do formulário */}
-      <MotiView
-        from={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ type: 'timing', duration: 600, delay: 500 }}
+      <View
         className="w-full"
       >
         {/* Cabeçalho */}
@@ -253,11 +249,7 @@ export default function RegisterScreen() {
         </View>
         
         {/* Botão de Registro */}
-        <MotiView
-          from={{ opacity: 0, translateY: 20 }}
-          animate={{ opacity: 1, translateY: 0 }}
-          transition={{ type: 'timing', duration: 400, delay: 700 }}
-        >
+        <View>
           <TouchableOpacity
             className={`w-full py-5 rounded-2xl mt-6 ${
               loading ? 'bg-gray-300' : 'bg-black'
@@ -282,7 +274,7 @@ export default function RegisterScreen() {
               )}
             </View>
           </TouchableOpacity>
-        </MotiView>
+        </View>
 
         {/* Divider */}
         <View className="flex-row items-center my-8">
@@ -302,20 +294,14 @@ export default function RegisterScreen() {
             </TouchableOpacity>
           </Link>
         </View>
-      </MotiView>
+      </View>
 
       {/* Decoração minimalista */}
-      <MotiView
-        from={{ opacity: 0, scale: 0.8 }}
-        animate={{ opacity: 0.03, scale: 1 }}
-        transition={{ type: 'timing', duration: 1500, delay: 800 }}
+      <View
         className="absolute bottom-0 right-0 w-80 h-80 bg-black rounded-full -mr-40 -mb-40"
       />
       
-      <MotiView
-        from={{ opacity: 0, scale: 0.8 }}
-        animate={{ opacity: 0.02, scale: 1 }}
-        transition={{ type: 'timing', duration: 1500, delay: 1000 }}
+      <View
         className="absolute top-0 left-0 w-64 h-64 bg-black rounded-full -ml-32 -mt-32"
       />
     </ScrollView>
