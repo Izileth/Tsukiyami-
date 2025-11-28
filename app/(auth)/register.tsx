@@ -1,12 +1,10 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Alert, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
-import { Link } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '@/utils/supabase';
+import { Ionicons } from '@expo/vector-icons';
+import { Link } from 'expo-router';
+import React, { useState } from 'react';
+import { Alert, KeyboardAvoidingView, Platform, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 export default function RegisterScreen() {
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -16,7 +14,7 @@ export default function RegisterScreen() {
   const [focusedInput, setFocusedInput] = useState<string | null>(null);
 
   async function signUpWithEmail() {
-    if (!firstName || !lastName || !email || !password) {
+    if (!email || !password) {
       Alert.alert('Erro', 'Por favor, preencha todos os campos.');
       return;
     }
@@ -37,17 +35,18 @@ export default function RegisterScreen() {
       password: password,
       options: {
         data: {
-          first_name: firstName,
-          last_name: lastName,
+          name: email, // Use email as default name, user can update later
         },
       },
     });
 
     if (error) {
       Alert.alert('Erro', error.message);
-    } else if (data.session) {
+    }
+    else if (data.session) {
       Alert.alert('Sucesso', 'Você está logado!');
-    } else if (data.user) {
+    }
+    else if (data.user) {
       Alert.alert('Sucesso', 'Verifique seu email para confirmar sua conta!');
     }
     
@@ -67,7 +66,7 @@ export default function RegisterScreen() {
 
         {/* Card do formulário */}
         <View
-          className="w-full"
+          className="w-full  pt-60"
         >
         {/* Cabeçalho */}
         <View className="mb-8">
@@ -79,62 +78,6 @@ export default function RegisterScreen() {
           </Text>
         </View>
         
-        {/* Input de Nome */}
-        <View className="mb-4">
-          <Text className="text-xs text-black/70 mb-3 tracking-[2px] uppercase font-semibold">
-            Primeiro Nome
-          </Text>
-          <View className="relative">
-            <View className="absolute left-4 top-4 z-10">
-              <Ionicons 
-                name="person-outline" 
-                size={20} 
-                color={focusedInput === 'firstName' ? '#000000' : '#999999'} 
-              />
-            </View>
-            <TextInput
-              className={`w-full pl-12 pr-4 py-4 bg-gray-50 border-2 ${
-                focusedInput === 'firstName' ? 'border-black bg-white' : 'border-gray-200'
-              } rounded-2xl text-base text-black`}
-              placeholder="Seu primeiro nome"
-              placeholderTextColor="#999999"
-              value={firstName}
-              onChangeText={setFirstName}
-              onFocus={() => setFocusedInput('firstName')}
-              onBlur={() => setFocusedInput(null)}
-              autoCapitalize="words"
-            />
-          </View>
-        </View>
-
-        {/* Input de Sobrenome */}
-        <View className="mb-4">
-          <Text className="text-xs text-black/70 mb-3 tracking-[2px] uppercase font-semibold">
-            Sobrenome
-          </Text>
-          <View className="relative">
-            <View className="absolute left-4 top-4 z-10">
-              <Ionicons 
-                name="person-outline" 
-                size={20} 
-                color={focusedInput === 'lastName' ? '#000000' : '#999999'} 
-              />
-            </View>
-            <TextInput
-              className={`w-full pl-12 pr-4 py-4 bg-gray-50 border-2 ${
-                focusedInput === 'lastName' ? 'border-black bg-white' : 'border-gray-200'
-              } rounded-2xl text-base text-black`}
-              placeholder="Seu sobrenome"
-              placeholderTextColor="#999999"
-              value={lastName}
-              onChangeText={setLastName}
-              onFocus={() => setFocusedInput('lastName')}
-              onBlur={() => setFocusedInput(null)}
-              autoCapitalize="words"
-            />
-          </View>
-        </View>
-
         {/* Input de Email */}
         <View className="mb-4">
           <Text className="text-xs text-black/70 mb-3 tracking-[2px] uppercase font-semibold">
@@ -300,15 +243,6 @@ export default function RegisterScreen() {
         </View>
       </View>
       </KeyboardAvoidingView>
-
-      {/* Decoração minimalista */}
-      <View
-        className="absolute bottom-0 right-0 w-80 h-80 bg-black rounded-full -mr-40 -mb-40"
-      />
-      
-      <View
-        className="absolute top-0 left-0 w-64 h-64 bg-black rounded-full -ml-32 -mt-32"
-      />
     </ScrollView>
   );
 }

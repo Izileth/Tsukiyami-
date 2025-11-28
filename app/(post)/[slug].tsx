@@ -85,7 +85,7 @@ export default function PostScreen() {
     };
 
     fetchPostData();
-  }, [slug, post?.id]); // Dependências mínimas: apenas slug e post.id
+  }, [slug, post, incrementView, fetchComments]); // Added fetchComments, incrementView, and post
 
   // Reset do ref quando o slug muda
   useEffect(() => {
@@ -101,23 +101,23 @@ export default function PostScreen() {
         scrollViewRef.current?.scrollToEnd({ animated: true });
       }, 300); // Delay to allow UI to update
     }
-  }, [profile?.id, post?.id, addComment]); // Use apenas IDs
+  }, [profile, post, addComment]); // Added post, profile
 
   const handleLike = useCallback(async () => {
     if (!profile || !post) return;
     await toggleLike(post.id);
-  }, [profile?.id, post?.id, toggleLike]); // Use apenas IDs
+  }, [profile, post, toggleLike]); // Added post, profile
 
   const handleDislike = useCallback(async () => {
     if (!profile || !post) return;
     await toggleDislike(post.id);
-  }, [profile?.id, post?.id, toggleDislike]); // Use apenas IDs
+  }, [profile, post, toggleDislike]); // Added post, profile
 
   // Dados calculados - memoizados
   const currentLikesCount = useMemo(() => post?.likes_count || 0, [post?.likes_count]);
   const currentDislikesCount = useMemo(() => post?.dislikes_count || 0, [post?.dislikes_count]);
-  const hasLiked = useMemo(() => post ? userLikes.has(post.id) : false, [post?.id, userLikes]);
-  const hasDisliked = useMemo(() => post ? userDislikes.has(post.id) : false, [post?.id, userDislikes]);
+  const hasLiked = useMemo(() => post ? userLikes.has(post.id) : false, [post, userLikes]); // Added post
+  const hasDisliked = useMemo(() => post ? userDislikes.has(post.id) : false, [post, userDislikes]); // Added post
   const reactionLoading = useMemo(() => loadingPostId === post?.id, [loadingPostId, post?.id]);
 
   // Combined loading state

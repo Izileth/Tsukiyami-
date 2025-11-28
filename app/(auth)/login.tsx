@@ -183,15 +183,6 @@ export default function AuthScreen() {
           </View>
         </View>
       </ScrollView>
-
-      {/* Decoração minimalista */}
-      <View
-        className="absolute bottom-0 right-0 w-80 h-80 bg-black rounded-full -mr-40 -mb-40"
-      />
-      
-      <View
-        className="absolute top-0 left-0 w-64 h-64 bg-black rounded-full -ml-32 -mt-32"
-      />
     </KeyboardAvoidingView>
   );
 }

@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@/utils/supabase';
 import { useAuth } from './AuthContext';
-
 export type Profile = {
   id: string;
   name?: string;

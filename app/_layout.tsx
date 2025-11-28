@@ -40,7 +40,7 @@ function RootLayoutNav() {
       // Redirect away from auth pages if the user is signed in.
       router.replace('/');
     }
-  }, [session, loading, segments, router]);
+  }, [session, loading, segments, router, inAuthGroup]);
 
   return (
     <>

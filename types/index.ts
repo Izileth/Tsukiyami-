@@ -9,14 +9,11 @@ export type Profile = {
   social_media_links?: any;
   website?: string;
   location?: string;
-  birth_date?: string | null; // ISO date string
-  updated_at?: string; // ISO date-time string
-  created_at?: string; // ISO date-time string
+  birth_date?: string | null;
+  updated_at?: string;
+  created_at?: string;
   slug?: string;
-  email: string;
-  password?: string;
-  first_name?: string;
-  last_name?: string;
+  email?: string;
 };
 
 export interface Category {
@@ -50,25 +47,12 @@ export interface Post {
   post_images: PostImage[];
   categories: Category[];
   tags: Tag[];
-  profile: Profile;
+  profile?: Profile;
+  profile_slug?: string;
+  profile_name?: string;
+  profile_avatar_url?: string;
 }
 
-export interface UserProfile {
-  id: string;
-  avatar_url?: string;
-  banner_url?: string;
-  name?: string;
-  first_name?: string;
-  last_name?: string;
-  slug?: string;
-  position?: string;
-  email?: string;
-  bio?: string;
-  created_at?: string;
-  updated_at?: string;
-  website?: string;
-  location?: string;
-  birth_date?: string;
-  social_media_links?: any;
-  role?: string;
+export interface UserProfile extends Profile {
+  // UserProfile now inherits all properties from Profile and can add more if needed
 }

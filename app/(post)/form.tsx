@@ -87,7 +87,7 @@ export default function PostFormScreen() {
       }
     };
     initializeForm();
-  }, [postId, posts]);
+  }, [postId, posts, router]);
 
   useEffect(() => {
     if (!post) {

@@ -77,7 +77,6 @@ export const PostsProvider = ({ children }: { children: React.ReactNode }) => {
         .from('posts')
         .select(`
           *,
-          profile:profiles!posts_user_id_fkey(*),
           post_images (id, image_url),
           post_categories (categories (id, name)),
           post_tags (tags (id, name))
@@ -89,12 +88,18 @@ export const PostsProvider = ({ children }: { children: React.ReactNode }) => {
       if (data) {
         const formattedPosts: Post[] = data.map((post: any) => ({
           ...post,
+          profile: {
+            id: post.user_id,
+            slug: post.profile_slug,
+            name: post.profile_name,
+            avatar_url: post.profile_avatar_url,
+          },
           post_images: post.post_images || [],
           categories: post.post_categories?.map((pc: any) => pc.categories).filter(Boolean) || [],
           tags: post.post_tags?.map((pt: any) => pt.tags).filter(Boolean) || [],
         }));
         setPosts(formattedPosts);
-        setSearchResults(formattedPosts); // Initialize search results with all posts
+        setSearchResults(formattedPosts);
       }
     } catch (error) {
       console.error('Error fetching posts:', error);
@@ -102,6 +107,7 @@ export const PostsProvider = ({ children }: { children: React.ReactNode }) => {
       setLoading(false);
     }
   }, []);
+
   const searchPosts = useCallback(async (query: string) => {
     try {
       setLoading(true);
@@ -109,12 +115,11 @@ export const PostsProvider = ({ children }: { children: React.ReactNode }) => {
         .from('posts')
         .select(`
         *,
-        profile:profiles!posts_user_id_fkey(*),
         post_images (id, image_url),
         post_categories (categories (id, name)),
         post_tags (tags (id, name))
       `)
-        .or(`title.ilike.%${query}%,description.ilike.%${query}%`)
+        .or(`title.ilike.%${query}%,description.ilike.%${query}%,profile_slug.ilike.%${query}%`)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -122,19 +127,18 @@ export const PostsProvider = ({ children }: { children: React.ReactNode }) => {
       if (data) {
         const formattedPosts: Post[] = data.map((post: any) => ({
           ...post,
+          profile: {
+            id: post.user_id,
+            slug: post.profile_slug,
+            name: post.profile_name,
+            avatar_url: post.profile_avatar_url,
+          },
           post_images: post.post_images || [],
           categories: post.post_categories?.map((pc: any) => pc.categories).filter(Boolean) || [],
           tags: post.post_tags?.map((pt: any) => pt.tags).filter(Boolean) || [],
         }));
-
-        // Filtrar também por username no lado do cliente
-        const filtered = formattedPosts.filter(post =>
-          post.title.toLowerCase().includes(query.toLowerCase()) ||
-          post.description.toLowerCase().includes(query.toLowerCase()) ||
-          post.profile?.slug?.toLowerCase().includes(query.toLowerCase())
-        );
-
-        setSearchResults(filtered);
+        
+        setSearchResults(formattedPosts);
       }
     } catch (error) {
       console.error('Error searching posts:', error);
@@ -189,8 +193,15 @@ export const PostsProvider = ({ children }: { children: React.ReactNode }) => {
     if (!profile) {
       return { data: null, error: { message: "Profile not loaded yet", code: "PROF-404", details: "User profile is not available to create a post.", hint: "Wait for the profile to be loaded." } as PostgrestError };
     }
+    
+    const postToInsert = {
+      ...postData,
+      profile_slug: profile.slug,
+      profile_name: profile.name,
+      profile_avatar_url: profile.avatar_url,
+    };
 
-    const { data, error } = await supabase.from('posts').insert(postData).select();
+    const { data, error } = await supabase.from('posts').insert(postToInsert).select();
     if (error) return { data: null, error };
     if (!data) return { data: null, error: { message: "No data returned after post creation", code: "PGRST100", details: "No data", hint: "No hint" } as PostgrestError };
 
@@ -278,18 +289,20 @@ export const PostsProvider = ({ children }: { children: React.ReactNode }) => {
       if (tagError) console.error("Error updating post tags:", tagError);
       if (tagData) tags = tagData.map((pt: any) => pt.tags);
     }
-
+    
+    const existingPost = posts.find(p => p.id === id);
     const fullUpdatedPost: Post = {
       ...updatedPostData,
-      profile: posts.find(p => p.id === id)?.profile,
+      profile: existingPost?.profile, // Keep existing profile data
       post_images: postImages,
       categories,
       tags,
-      likes_count: postData.likes_count ?? posts.find(p => p.id === id)?.likes_count ?? 0,
-      dislikes_count: postData.dislikes_count ?? posts.find(p => p.id === id)?.dislikes_count ?? 0,
-      views_count: postData.views_count ?? posts.find(p => p.id === id)?.views_count ?? 0,
-      comments_count: postData.comments_count ?? posts.find(p => p.id === id)?.comments_count ?? 0,
+      likes_count: postData.likes_count ?? existingPost?.likes_count ?? 0,
+      dislikes_count: postData.dislikes_count ?? existingPost?.dislikes_count ?? 0,
+      views_count: postData.views_count ?? existingPost?.views_count ?? 0,
+      comments_count: postData.comments_count ?? existingPost?.comments_count ?? 0,
     };
+    
     setPosts((prevPosts) =>
       prevPosts.map((post) => (post.id === id ? fullUpdatedPost : post))
     );

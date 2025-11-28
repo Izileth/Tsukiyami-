@@ -50,6 +50,12 @@ export function usePublicProfile(slug: string) {
         } else {
           const formattedPosts = postsData?.map((p: any) => ({
             ...p,
+            profile: {
+              id: p.user_id,
+              slug: p.profile_slug,
+              name: p.profile_name,
+              avatar_url: p.profile_avatar_url,
+            },
             categories: p.post_categories?.map((pc: any) => pc.categories) || [],
             tags: p.post_tags?.map((pt: any) => pt.tags) || [],
           })) || [];

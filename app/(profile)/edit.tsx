@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { ScrollView, ActivityIndicator, Alert, SafeAreaView, View } from 'react-native';
+import { ScrollView, ActivityIndicator, SafeAreaView, View } from 'react-native';
 import { useProfile, Profile } from '@/context/ProfileContext';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { supabase } from '@/utils/supabase';
 import { ActionButtons } from '@/components/profile/edit/ActionButtons';
 import { EditForm } from '@/components/profile/edit/EditForm';
-
+import Toast from 'react-native-toast-message';
 const initialFormData = {
   first_name: '',
   last_name: '',
@@ -58,7 +58,13 @@ export default function EditProfileScreen() {
 
   const handleUpdate = async () => {
     if (newPassword && newPassword !== confirmPassword) {
-      Alert.alert('Error', 'Passwords do not match.');
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Passwords do not match',
+        position: 'top',
+        visibilityTime: 5000
+      })
       return;
     }
 
@@ -79,12 +85,23 @@ export default function EditProfileScreen() {
         }
       }
 
-      Alert.alert('Success', 'Profile updated successfully!');
+      Toast.show({
+        type: 'success',
+        text1: 'Profile updated successfully',
+        position: 'top',
+        visibilityTime: 5000
+      })
       if (router.canGoBack()) {
         router.back();
       }
     } catch (error: any) {
-      Alert.alert('Error', `Failed to update profile: ${error.message}`);
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: error.message,
+        position: 'top',
+        visibilityTime: 5000
+      })
     } finally {
       setIsUpdating(false);
     }

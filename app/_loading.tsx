@@ -106,7 +106,7 @@ export default function LoadingScreen({
       clearTimeout(timer);
       clearTimeout(dotsTimer);
     };
-  }, []);
+  }, [dot1Opacity, dot2Opacity, dot3Opacity, fadeAnim, kanjiScale, romajiOpacity, taglineOpacity]);
 
   const startExit = isAppReady && timeElapsed;
 
@@ -121,7 +121,7 @@ export default function LoadingScreen({
         onExitAnimationFinish();
       });
     }
-  }, [startExit, onExitAnimationFinish]);
+  }, [startExit, onExitAnimationFinish, screenOpacity]);
 
   return (
     <Animated.View

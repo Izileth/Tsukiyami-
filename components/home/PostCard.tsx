@@ -48,7 +48,7 @@ export const PostCard = ({ post }: PostCardProps) => {
                 />
                 <View>
                   <Text className="text-sm font-semibold text-black">
-                    {post.profile.name || post.profile.first_name || 'Usuário Anônimo'}
+                    {post.profile.name || 'Usuário Anônimo'}
                   </Text>
                   {post.profile.slug && (
                     <Text className="text-xs text-black/60">
