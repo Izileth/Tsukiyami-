@@ -21,26 +21,8 @@ import LoadingScreen from './_loading';
 SplashScreen.preventAutoHideAsync();
 
 function RootLayoutNav() {
-  const { session, loading } = useAuth();
-  const router = useRouter();
   const segments = useSegments();
   const inAuthGroup = segments[0] === '(auth)';
-
-  useEffect(() => {
-    // Wait for the session to be loaded
-    if (loading) {
-      return;
-    }
-
-    if (!session && !inAuthGroup) {
-      // Redirect to the login page if the user is not signed in
-      // and not on an auth page.
-      router.replace('/(auth)/login');
-    } else if (session && inAuthGroup) {
-      // Redirect away from auth pages if the user is signed in.
-      router.replace('/');
-    }
-  }, [session, loading, segments, router, inAuthGroup]);
 
   return (
     <>
@@ -59,11 +41,26 @@ function RootLayoutNav() {
 
 // Wrapper component to handle loading screen
 function AppLayout() {
-  const { loading } = useAuth();
+  const { session, loading } = useAuth();
+  const router = useRouter();
+  const segments = useSegments();
   const [isSplashAnimationComplete, setIsSplashAnimationComplete] = useState(false);
 
   // App is ready when the auth session loading is finished.
   const isAppReady = !loading;
+
+  useEffect(() => {
+    if (!isAppReady || !isSplashAnimationComplete) return;
+
+    const inAuthGroup = segments[0] === '(auth)';
+
+    if (!session && !inAuthGroup) {
+      router.replace('/(auth)/login');
+    } else if (session && inAuthGroup) {
+      router.replace('/');
+    }
+  }, [isAppReady, isSplashAnimationComplete, session, segments, router]);
+
 
   if (!isSplashAnimationComplete) {
     return (

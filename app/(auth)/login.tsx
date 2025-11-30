@@ -26,14 +26,15 @@ export default function AuthScreen() {
         position: 'top',
         visibilityTime: 5000,
       });
+    } else {
+      Toast.show({
+        type: 'success',
+        text1: 'Login realizado com sucesso',
+        position: 'top',
+        visibilityTime: 5000,
+      });
     }
     setLoading(false);
-    Toast.show({
-      type: 'success',
-      text1: 'Login realizado com sucesso',
-      position: 'top',
-      visibilityTime: 5000,
-    })
   }
 
   return (
